@@ -19,7 +19,7 @@ Um player de IPTV desenvolvido em **JavaScript puro**, que permite ao usuário c
 
 ## 🖼️ **Pré-visualização**
 
-![Image](<img width="1912" height="897" alt="Image" src="https://github.com/user-attachments/assets/c08216aa-19be-4f2a-bd29-7e9d9f816140" />)
+<img width="1912" height="897" alt="Image" src="https://github.com/user-attachments/assets/c08216aa-19be-4f2a-bd29-7e9d9f816140" />
 
 ---
 
