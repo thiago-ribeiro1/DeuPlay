@@ -1,4 +1,3 @@
-
 # 📺 IPTV Player
 
 Um player de IPTV desenvolvido em **JavaScript puro**, que permite ao usuário carregar e assistir canais de televisão via listas M3U, tanto de URLs externas quanto arquivos locais. O player utiliza a biblioteca **hls.js** para suporte ao streaming de vídeos no formato HLS (HTTP Live Streaming).
@@ -61,6 +60,7 @@ code .
 │   └── logo.png                                        # Logo alternativo
 ├── js
 │   └── script.js               # Lógica principal em JavaScript
+│   └── stream.js
 ├── Listas_IPTV
 │   ├── Canais BR.m3u                   # Lista de canais brasileiros
 │   ├── Canais_Abertos_BR.m3u           # Canais abertos do Brasil
