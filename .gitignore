@@ -1,0 +1,7 @@
+node_modules/
+media/streams/*
+!media/streams/.gitkeep
+*.log
+.env
+.DS_Store
+Thumbs.db

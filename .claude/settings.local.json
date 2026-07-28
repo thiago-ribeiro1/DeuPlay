@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm -v)",
+      "Bash(ffmpeg -version)",
+      "Bash(ffprobe -version)",
+      "Bash(cd \"/c/Users/thiago/Downloads/IPTV Player\" && mkdir -p public server/routes server/services server/security server/utils media/streams tests)",
+      "Bash(npm install *)",
+      "Bash(npm audit *)",
+      "Bash(npm run *)",
+      "Bash(npm test *)",
+      "Bash(node --test tests)",
+      "Bash(node -e \"console.log\\(process.argv\\)\" --test tests)",
+      "Bash(node --test tests/*.test.js)",
+      "Bash(command -v ffmpeg)",
+      "Bash(command -v ffprobe)"
+    ]
+  }
+}

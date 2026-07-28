@@ -1,0 +1,25 @@
+{
+  "name": "iptv-player",
+  "version": "1.0.0",
+  "description": "IPTV Player local full-stack: frontend estatico + backend Node/Express com FFmpeg para probing, remux e transcodificacao para HLS.",
+  "type": "module",
+  "private": true,
+  "main": "server/app.js",
+  "scripts": {
+    "start": "node server/app.js",
+    "dev": "node --watch server/app.js",
+    "test": "node --test tests/*.test.js",
+    "lint": "eslint ."
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "eslint": "^9.9.0",
+    "@eslint/js": "^9.9.0"
+  }
+}

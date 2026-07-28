@@ -1,18 +1,20 @@
 # 📺 IPTV Player
 
-Um player de IPTV desenvolvido em **JavaScript puro**, que permite ao usuário carregar e assistir canais de televisão via listas M3U, tanto de URLs externas quanto arquivos locais. O player utiliza a biblioteca **hls.js** para suporte ao streaming de vídeos no formato HLS (HTTP Live Streaming).
+Um player de IPTV desenvolvido com **JavaScript puro no frontend** e **Node.js/Express no backend**, que permite ao usuário carregar e assistir canais de televisão por meio de listas M3U, tanto de URLs externas quanto de arquivos locais. O projeto utiliza **hls.js** para reprodução de streams HLS no navegador e **FFmpeg** para análise, remux e transcodificação dos canais quando necessário.
+
+---
 
 ## 🚀 Funcionalidades
 
-- 🔗 **Carregar lista M3U via URL:** Basta inserir a URL da lista e carregar os canais disponíveis.
-- 📂 **Carregar arquivo M3U local:** Permite fazer upload de um arquivo M3U diretamente do seu dispositivo.
-- 🌎 **Playlists pré-definidas:**
-  - **Todos os Canais:** Lista global com vários canais.
-  - **Canais Brasil:** Lista com canais abertos do Brasil.
-- 📺 **Reprodução de canais ao vivo:** Reproduza vídeos diretamente no navegador usando o elemento `<video>`.
-- 🎚️ **Seleção de canais:** Interface intuitiva para escolher o canal desejado.
-
-💡 **Recomendação:** Para baixar listas IPTV adicionais, visite [htforum.net](http://htforum.net/).
+- 📡 **Carregar lista M3U via URL ou arquivo local:** cole o link da playlist ou faça upload direto do dispositivo.
+- 📁 **Playlists pré-definidas:** algumas listas já vêm junto (canais abertos do Brasil, CineTV, etc.) pra testar rapidinho.
+- 🧠 **Estratégia de reprodução automática:** o backend sonda o stream (via ffprobe) e escolhe a melhor abordagem — reprodução direta, proxy HTTP/HLS, remux ou transcodificação completa (vídeo, áudio ou ambos) — sem precisar de nada manual.
+- ⚡ **Aceleração por hardware:** detecta e usa NVENC/QuickSync/VAAPI/VideoToolbox/AMF quando disponíveis, caindo para libx264 (software) se nada for compatível.
+- 🩺 **Painel de diagnóstico (`/admin`):** mostra streams ativos, estratégia usada, status, viewers, PID e erros em tempo real, com ações administrativas.
+- ❤️ **Health check (`/api/health`):** status do FFmpeg/ffprobe, streams ativos, uso de disco, tudo em JSON.
+- 🧹 **Limpeza automática:** sessões e processos ociosos se encerram sozinhos, e os arquivos de stream são zerados a cada boot.
+- 🔒 **Validação de URLs:** bloqueia por padrão acesso a hosts privados/localhost, protegendo contra SSRF.
+- 🐳 **Pronto para Docker:** `Dockerfile` e `docker-compose.yml` inclusos, já com FFmpeg embutido na imagem.
 
 ---
 
@@ -22,81 +24,98 @@ Um player de IPTV desenvolvido em **JavaScript puro**, que permite ao usuário c
 
 ---
 
-## 💾 Como Usar o Projeto
+## 🛠️ Como usar o projeto
 
-### 🔨 **Passo 1: Clone o repositório**
+### Pré-requisitos
+
+- [Node.js](https://nodejs.org/) 18.17 ou superior
+- [FFmpeg](https://ffmpeg.org/) instalado (precisa do `ffmpeg` e `ffprobe` no PATH, ou configure os caminhos no `.env`)
+
+### Passo 1: Clone o repositório
 
 ```bash
 git clone https://github.com/thiago-ribeiro1/IPTV-Player.git
+cd IPTV-Player
 ```
 
-### 🖥️ **Passo 2: Abra o projeto no Visual Studio Code**
+### Passo 2: Instale as dependências
 
 ```bash
-cd IPTV-Player
-code .
+npm install
 ```
 
-### 🌐 **Passo 3: Execute o projeto**
+### Passo 3: Configure o ambiente
 
-✅ **Recomendado:** Utilize a extensão **Live Server** do VS Code:
+Copie o `.env.example` para `.env` e ajuste se precisar (porta, limites de streams simultâneos, modo de reprodução, etc.):
 
-1. Clique com o botão direito no arquivo `index.html` localizado no diretório raiz.
-2. Selecione **"Open with Live Server"**.
-
-🔗 **Alternativa:** Abra o arquivo `index.html` diretamente em seu navegador.
-
----
-
-## 📝 Estrutura do Projeto
-
-```
-├── css
-│   └── style.css               # Estilos personalizados 
-├── img
-│   ├── glenn-carstens-peters-EOQhsfFBhRk-unsplash.jpg  # Imagem background
-│   ├── icon.png                                        # Ícone da aba do navegador
-│   ├── Logo horizontal.png                             # Logotipo principal
-│   └── logo.png                                        # Logo alternativo
-├── js
-│   └── script.js               # Lógica principal em JavaScript
-│   └── stream.js
-├── Listas_IPTV
-│   ├── Canais BR.m3u                   # Lista de canais brasileiros
-│   ├── Canais_Abertos_BR.m3u           # Canais abertos do Brasil
-│   ├── CineTV_Brasil.m3u               # Lista de canais e filmes
-│   └── Paulo.m3u                       # Exemplo de lista personalizada
-├── index.html                  # Página principal do IPTV Player
+```bash
+cp .env.example .env
 ```
 
+### Passo 4: Rode o servidor
+
+```bash
+npm start
+```
+
+Ou em modo desenvolvimento (com reload automático a cada alteração):
+
+```bash
+npm run dev
+```
+
+Acesse **http://localhost:3000** no navegador. O painel de diagnóstico fica em **http://localhost:3000/admin**.
+
+### Alternativa: Docker
+
+```bash
+docker compose up --build
+```
+
+## 🧪 Testes
+
+```bash
+npm test
+```
+
 ---
 
-## 📜 **Descrição do Código JavaScript (`script.js`)**
+## 📂 Estrutura do Projeto
 
-- 🔄 **Gerenciamento de Playlists:** Carrega listas M3U pré-definidas e personalizadas inseridas pelo usuário.
-- 🔍 **Análise de Arquivos M3U:** Processa arquivos M3U para extrair nomes e URLs dos canais.
-- 🎥 **Reprodução de Vídeo:**
-  - Usa `hls.js` para streaming HLS.
-  - Suporte nativo para navegadores compatíveis.
-- 📝 **Funções Principais:**
-  - `addPlaylist()`: Adiciona nova playlist a partir de uma URL.
-  - `loadPlaylist(type)`: Carrega e analisa a playlist especificada.
-  - `parseM3U(m3uText)`: Analisa o conteúdo do arquivo M3U.
-  - `loadLocalFile()`: Carrega e processa arquivos M3U locais.
-  - `loadChannel()`: Reproduz o canal selecionado.
+```
+├── server/                    # Backend Node/Express
+│   ├── app.js                  # Bootstrap do servidor
+│   ├── config.js               # Configuração via variáveis de ambiente
+│   ├── routes/                 # Endpoints da API (playlists, canais, playback, streams, health)
+│   ├── services/                # Probe, estratégia de reprodução, proxy HTTP/HLS, FFmpeg, hardware, cleanup
+│   ├── security/                # Validação de URLs (proteção contra SSRF)
+│   └── utils/                   # Helpers (logger, ids)
+├── public/                    # Frontend estático
+│   ├── index.html               # Página principal do player
+│   ├── admin.html               # Painel de diagnóstico
+│   ├── js/script.js             # Lógica do player (playlists, player, chamadas à API)
+│   ├── css/style.css
+│   └── Listas_IPTV/             # Playlists M3U de exemplo
+├── tests/                     # Testes automatizados (unitários e e2e)
+├── media/streams/             # Saída temporária dos streams gerados pelo FFmpeg
+├── Dockerfile / docker-compose.yml
+└── .env.example                # Variáveis de ambiente disponíveis
+```
 
 ---
 
-## ⚡ **Tecnologias Utilizadas**
+## ⚡ Tecnologias Utilizadas
 
-- 💡 **HTML5**
-- 🎨 **CSS3** (com **Bootstrap 5** para responsividade)
-- 💻 **JavaScript puro**
-- 📚 **hls.js** para suporte a streaming HLS
+- 🟢 **Node.js + Express** no backend
+- 🎬 **FFmpeg/ffprobe** para probing, remux e transcodificação
+- 💻 **JavaScript puro** no frontend
+- 📡 **hls.js** para streaming HLS no navegador
+- 🎨 **HTML5 + CSS3** (com Bootstrap 5 para responsividade)
+- 🐳 **Docker** para deploy
 
 ---
 
-## 📜 **Licença**
+## 📜 Licença
 
 Distribuído sob a Licença de Uso Restrito (Licença Proprietária).
 Este software e os arquivos de documentação associados são fornecidos exclusivamente para uso pessoal e educacional.
@@ -104,4 +123,4 @@ Veja o arquivo [LICENSE](https://github.com/thiago-ribeiro1/IPTV-Player/blob/mai
 
 ---
 
-Desenvolvido por [Thiago Ribeiro](https://github.com/thiago-ribeiro1) 
+Desenvolvido por [Thiago Ribeiro](https://github.com/thiago-ribeiro1)
