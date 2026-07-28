@@ -26,11 +26,31 @@ const toast = document.getElementById("toast");
 
 const PAGE_SIZE = 60;
 
-// Preencha para habilitar o proxy (ver api/stream.js). Ex.: "/api/stream?url="
-const STREAM_PROXY = "";
-
 const ATTEMPT_TIMEOUT = 12000;
 const MAX_RECOVERIES = 2;
+const BACKEND_HEARTBEAT_MS = 8000;
+const BACKEND_TIMEOUT = 25000;
+
+const STRATEGY_LABELS = {
+  direct: "reprodução direta",
+  http_proxy: "proxy HTTP",
+  hls_proxy: "proxy HLS",
+  remux: "remux local",
+  copy_video_transcode_audio: "conversão de áudio",
+  transcode_video_copy_audio: "conversão de vídeo",
+  transcode_all: "transcodificação completa",
+  audio_only: "somente áudio",
+};
+
+// Estrategias que efetivamente sobem um processo FFmpeg no backend (as
+// demais — direct/http_proxy/hls_proxy — nao passam por FFmpeg).
+const FFMPEG_STRATEGIES = new Set([
+  "remux",
+  "copy_video_transcode_audio",
+  "transcode_video_copy_audio",
+  "transcode_all",
+  "audio_only",
+]);
 
 const HLS_CONFIG = {
   manifestLoadingTimeOut: 8000,
@@ -60,6 +80,26 @@ let attemptIndex = 0;
 let recoveries = 0;
 let watchdog = null;
 let lastFailure = "";
+let playbackMode = "backend_only"; // mesmo default do backend; sobrescrito abaixo
+let triedBackendFallback = false;
+let currentSession = null;
+let heartbeatTimer = null;
+
+// loadChannel aguarda esta promise antes de decidir o fluxo de reproducao,
+// entao nunca ha corrida entre "clicou no canal" e "ainda nao sei o modo".
+const configReady = fetch("/api/config")
+  .then((response) => (response.ok ? response.json() : null))
+  .then((data) => {
+    if (data && data.playbackMode) playbackMode = data.playbackMode;
+    console.info("[iptv] modo de reprodução:", playbackMode);
+  })
+  .catch(() => {
+    console.warn("[iptv] /api/config indisponível, mantendo modo padrão:", playbackMode);
+  });
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function addPlaylist() {
   const newUrl = urlInput.value.trim();
@@ -82,10 +122,10 @@ async function loadPlaylist(type) {
     const response = await fetch(playlistURL);
     if (!response.ok) throw new Error("HTTP " + response.status);
 
-    parseM3U(await response.text());
+    const count = await parseM3U(await response.text(), type);
 
-    if (channels.length) {
-      showToast(channels.length + " canais carregados.");
+    if (count) {
+      showToast(count + " canais carregados.");
     } else {
       showToast("A lista foi lida, mas nenhum canal válido foi encontrado.", "error");
     }
@@ -108,62 +148,44 @@ function loadLocalFile() {
   fileNameLabel.dataset.loaded = "true";
 
   const reader = new FileReader();
-  reader.onload = (event) => {
-    parseM3U(event.target.result);
-    if (channels.length) {
-      showToast(channels.length + " canais carregados de " + file.name + ".");
-    } else {
-      showToast("Nenhum canal válido foi encontrado nesse arquivo.", "error");
+  reader.onload = async (event) => {
+    try {
+      const count = await parseM3U(event.target.result, file.name);
+      if (count) {
+        showToast(count + " canais carregados de " + file.name + ".");
+      } else {
+        showToast("Nenhum canal válido foi encontrado nesse arquivo.", "error");
+      }
+    } catch (error) {
+      console.error("Falha ao importar o arquivo no servidor local:", error);
+      showToast("Não foi possível importar esse arquivo no servidor local.", "error");
     }
   };
   reader.onerror = () => showToast("Não foi possível ler o arquivo selecionado.", "error");
   reader.readAsText(file);
 }
 
-function parseM3U(m3uText) {
-  const lines = m3uText.split(/\r?\n/);
-  const byChannel = new Map();
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line.startsWith("#EXTINF")) continue;
-
-    const separator = findNameSeparator(line);
-    if (separator === -1) continue;
-
-    const attributes = line.slice(0, separator);
-    const rawName = line.slice(separator + 1).trim();
-
-    let url = "";
-    for (let j = i + 1; j < lines.length; j++) {
-      const candidate = lines[j].trim();
-      if (!candidate || candidate.startsWith("#")) continue;
-      url = candidate;
-      break;
-    }
-
-    if (!url.startsWith("http")) continue;
-
-    const quality = detectQuality(rawName);
-    const name = cleanName(rawName, quality) || "Canal sem nome";
-    const key = normalize(name) + "|" + quality;
-    const existing = byChannel.get(key);
-
-    if (existing) {
-      if (!existing.urls.includes(url)) existing.urls.push(url);
-      continue;
-    }
-
-    byChannel.set(key, {
-      name,
-      urls: [url],
-      logo: getAttribute(attributes, "tvg-logo"),
-      group: getAttribute(attributes, "group-title") || "Sem categoria",
-      quality,
-    });
+// O parser M3U roda no BACKEND (server/services/m3uParser.js), nao mais no
+// navegador: assim frontend e backend enxergam exatamente o mesmo catalogo,
+// com os mesmos IDs de canal, e o playback pode referenciar o canal pelo ID
+// (ver loadChannel/startBackendPlayback) em vez de reenviar a URL solta.
+async function parseM3U(m3uText, name) {
+  const importResponse = await fetch("/api/playlists/import", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sourceType: "text", name, text: m3uText }),
+  });
+  const imported = await importResponse.json();
+  if (!importResponse.ok) {
+    throw new Error(imported.error || "Falha ao importar a playlist no servidor local.");
   }
 
-  channels = [...byChannel.values()];
+  const channelsResponse = await fetch("/api/playlists/" + imported.id + "/channels");
+  if (!channelsResponse.ok) {
+    throw new Error("Falha ao carregar os canais importados.");
+  }
+
+  channels = await channelsResponse.json();
   currentChannel = null;
   stopPlayback();
 
@@ -177,22 +199,9 @@ function parseM3U(m3uText) {
     nowPlayingGroup.hidden = true;
     setPlayerState("idle", "Escolha um canal na lista para começar");
   }
-}
 
-// Primeira vírgula fora de aspas: nomes de canal podem conter vírgula.
-function findNameSeparator(line) {
-  let insideQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    if (char === '"') insideQuotes = !insideQuotes;
-    else if (char === "," && !insideQuotes) return i;
-  }
-  return -1;
-}
-
-function getAttribute(source, key) {
-  const match = source.match(new RegExp(key + '="([^"]*)"', "i"));
-  return match ? match[1].trim() : "";
+  console.info("[iptv] playlist importada pelo backend:", imported.id, "-", channels.length, "canais");
+  return channels.length;
 }
 
 function detectQuality(name) {
@@ -257,6 +266,9 @@ function createChannelItem(channel, index) {
   const item = document.createElement("li");
   item.className = "channel";
 
+  const quality = detectQuality(channel.name);
+  const displayName = cleanName(channel.name, quality) || channel.name;
+
   const button = document.createElement("button");
   button.type = "button";
   button.className = "channel__btn";
@@ -265,10 +277,10 @@ function createChannelItem(channel, index) {
 
   const logo = document.createElement("span");
   logo.className = "channel__logo";
-  logo.textContent = channel.name.charAt(0).toUpperCase();
-  if (channel.logo) {
+  logo.textContent = displayName.charAt(0).toUpperCase();
+  if (channel.logoUrl) {
     const image = document.createElement("img");
-    image.src = channel.logo;
+    image.src = channel.logoUrl;
     image.alt = "";
     image.loading = "lazy";
     image.referrerPolicy = "no-referrer";
@@ -281,7 +293,7 @@ function createChannelItem(channel, index) {
 
   const name = document.createElement("span");
   name.className = "channel__name";
-  name.textContent = channel.name;
+  name.textContent = displayName;
 
   const group = document.createElement("span");
   group.className = "channel__group";
@@ -290,11 +302,11 @@ function createChannelItem(channel, index) {
   meta.append(name, group);
   button.append(logo, meta);
 
-  if (channel.quality) {
-    const quality = document.createElement("span");
-    quality.className = "channel__quality";
-    quality.textContent = channel.quality;
-    button.appendChild(quality);
+  if (quality) {
+    const qualityBadge = document.createElement("span");
+    qualityBadge.className = "channel__quality";
+    qualityBadge.textContent = quality;
+    button.appendChild(qualityBadge);
   }
 
   const equalizer = document.createElement("span");
@@ -337,46 +349,51 @@ function normalize(text) {
     .toLowerCase();
 }
 
-function loadChannel(channel) {
+async function loadChannel(channel) {
   const target = channel || currentChannel;
   if (!target) return;
 
   currentChannel = target;
   updateSelection();
   updateNowPlaying(target);
+  endBackendSession(false);
 
-  attempts = buildAttempts(target);
+  // Nunca decide o fluxo antes de saber o PLAYBACK_MODE real do backend:
+  // evita a corrida "usuário clicou antes do /api/config responder" que
+  // fazia a reprodução direta antiga rodar por engano.
+  setPlayerState("loading", "Analisando…");
+  await configReady;
+  if (target !== currentChannel) return; // usuário já trocou de canal
+
+  triedBackendFallback = playbackMode !== "direct_preferred";
+  attempts = playbackMode === "direct_preferred" ? buildAttempts(target) : [];
   attemptIndex = 0;
   lastFailure = "";
 
   if (!attempts.length) {
-    setPlayerState("error", "Este canal só tem fontes em HTTP, bloqueadas em páginas HTTPS.");
+    startBackendPlayback(target);
     return;
   }
 
   startAttempt();
 }
 
-// Cada fonte vira até duas tentativas: direta e, se houver proxy, através dele.
-// Em página HTTPS a tentativa direta em HTTP é descartada: o navegador bloqueia.
+// Uma unica tentativa direta por canal. Em pagina HTTPS a URL em HTTP e
+// descartada: o navegador bloqueia (mixed content). Usado apenas em
+// PLAYBACK_MODE=direct_preferred; nos demais modos o backend decide sozinho
+// quando um proxy e necessario (ver server/services/httpProxy.js/hlsProxy.js).
 function buildAttempts(channel) {
-  const list = [];
+  const url = channel.sourceUrl;
+  if (!url) return [];
+
   const pageIsHttps = location.protocol === "https:";
-
-  channel.urls.forEach((url) => {
-    const blockedByMixedContent = pageIsHttps && url.startsWith("http://");
-    if (!blockedByMixedContent) list.push({ url, viaProxy: false });
-    if (STREAM_PROXY) list.push({ url, viaProxy: true });
-  });
-
-  return list;
+  const blockedByMixedContent = pageIsHttps && url.startsWith("http://");
+  return blockedByMixedContent ? [] : [{ url }];
 }
 
 function startAttempt() {
   const attempt = attempts[attemptIndex];
-  const source = attempt.viaProxy
-    ? STREAM_PROXY + encodeURIComponent(attempt.url)
-    : attempt.url;
+  const source = attempt.url;
 
   clearAttemptResources();
   recoveries = 0;
@@ -443,6 +460,12 @@ function nextAttempt() {
     return;
   }
 
+  if (!triedBackendFallback) {
+    triedBackendFallback = true;
+    startBackendPlayback(currentChannel);
+    return;
+  }
+
   stopPlayback();
   const reason = lastFailure || "Não foi possível reproduzir este canal.";
   setPlayerState(
@@ -453,11 +476,142 @@ function nextAttempt() {
   );
 }
 
+// Pede ao servidor local (ffprobe + FFmpeg) para decidir e preparar a
+// reprodução deste canal. O canal já existe no backend com este mesmo ID
+// (importado via /api/playlists/import — ver parseM3U), entao usamos a rota
+// POST /api/channels/:id/playback em vez de reenviar a URL solta.
+async function startBackendPlayback(channel) {
+  if (!channel) return;
+
+  if (!channel.id) {
+    setPlayerState("error", "Este canal ainda não foi importado pelo servidor local.");
+    return;
+  }
+
+  clearAttemptResources();
+  setPlayerState("loading", "Analisando…");
+  console.info("[iptv] POST /api/channels/" + channel.id + "/playback (" + channel.name + ")");
+
+  let response;
+  let data;
+  try {
+    response = await fetch("/api/channels/" + channel.id + "/playback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    data = await response.json();
+  } catch {
+    setPlayerState("error", "Falha ao contatar o servidor local.");
+    return;
+  }
+
+  if (channel !== currentChannel) return; // usuário já trocou de canal
+
+  if (!response.ok || data.status !== "ready") {
+    const message =
+      data && data.diagnosticMessage
+        ? data.diagnosticMessage
+        : "O servidor local não conseguiu reproduzir este canal.";
+    console.warn("[iptv] playback falhou:", data && data.reason, "| estratégias tentadas:", data && data.attemptedProfiles);
+    setPlayerState("error", message);
+    return;
+  }
+
+  console.info("[iptv] estratégia escolhida:", data.strategy, "| sessão:", data.sessionId, "| url:", data.playbackUrl);
+  currentSession = { id: data.sessionId };
+
+  // Narra os estágios reais que já aconteceram no backend antes de responder
+  // (probe → decisão → FFmpeg pronto): o pedido é síncrono, entao aqui só
+  // exibimos a sequência, não simulamos progresso que não ocorreu de fato.
+  setPlayerState("loading", "Estratégia: " + describeStrategy(data.strategy));
+  await sleep(200);
+  if (channel !== currentChannel) return;
+
+  if (FFMPEG_STRATEGIES.has(data.strategy)) {
+    setPlayerState("loading", "Iniciando FFmpeg…");
+    await sleep(200);
+    if (channel !== currentChannel) return;
+
+    setPlayerState("loading", "Aguardando segmentos…");
+    await sleep(150);
+    if (channel !== currentChannel) return;
+  }
+
+  startHeartbeat();
+  playBackendUrl(data.playbackUrl, data.strategy);
+}
+
+function describeStrategy(strategy) {
+  return STRATEGY_LABELS[strategy] || strategy || "servidor local";
+}
+
+function playBackendUrl(url, strategy) {
+  clearTimeout(watchdog);
+  watchdog = setTimeout(() => {
+    setPlayerState("error", "O servidor local demorou demais para iniciar este canal.");
+  }, BACKEND_TIMEOUT);
+
+  // playbackUrl vem sempre relativa (ex.: /api/playback/<sessão>/index.m3u8
+  // ou /api/playback/<sessão>/proxy) — o próprio navegador resolve para a
+  // origem local, nunca para a URL externa do canal.
+  console.info("[iptv] HLS.js carregando URL local:", url, "(estratégia " + strategy + ")");
+
+  if (window.Hls && Hls.isSupported()) {
+    hlsInstance = new Hls(HLS_CONFIG);
+    hlsInstance.loadSource(url);
+    hlsInstance.attachMedia(videoElement);
+    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+      clearTimeout(watchdog);
+      setPlayerState("loading", "Reproduzindo HLS local…");
+      playSafely();
+    });
+    hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+      if (!data || !data.fatal) return;
+      clearTimeout(watchdog);
+      lastFailure = describeFailure(data);
+      console.warn("[iptv] erro fatal do HLS.js na URL local:", lastFailure);
+      endBackendSession(false);
+      setPlayerState("error", lastFailure);
+    });
+    return;
+  }
+
+  nativeSource = url;
+  videoElement.src = url;
+  playSafely();
+}
+
+function startHeartbeat() {
+  stopHeartbeat();
+  heartbeatTimer = setInterval(() => {
+    if (!currentSession) return;
+    fetch("/api/playback/" + currentSession.id + "/heartbeat", { method: "POST" }).catch(() => {});
+  }, BACKEND_HEARTBEAT_MS);
+}
+
+function stopHeartbeat() {
+  clearInterval(heartbeatTimer);
+  heartbeatTimer = null;
+}
+
+// useBeacon=true ao fechar a aba (sendBeacon sobrevive a navegacao/unload);
+// useBeacon=false ao trocar de canal, onde um fetch normal ja e suficiente.
+function endBackendSession(useBeacon) {
+  stopHeartbeat();
+  if (!currentSession) return;
+  const id = currentSession.id;
+  currentSession = null;
+
+  if (useBeacon && navigator.sendBeacon) {
+    navigator.sendBeacon("/api/playback/" + id + "/stop");
+  } else {
+    fetch("/api/playback/" + id, { method: "DELETE", keepalive: true }).catch(() => {});
+  }
+}
+
 function describeAttempt() {
-  const attempt = attempts[attemptIndex];
-  if (attemptIndex === 0) return "Conectando ao canal…";
-  const suffix = attempt.viaProxy ? " (via proxy)" : "";
-  return "Tentando outra fonte " + (attemptIndex + 1) + "/" + attempts.length + suffix + "…";
+  return "Conectando ao canal…";
 }
 
 function isHlsUrl(url) {
@@ -476,6 +630,7 @@ function clearAttemptResources() {
 
 function stopPlayback() {
   clearAttemptResources();
+  endBackendSession(false);
   videoElement.removeAttribute("src");
   videoElement.load();
 }
@@ -617,3 +772,6 @@ menuToggle.addEventListener("click", () => {
   topbarMenu.dataset.open = String(!isOpen);
   menuToggle.setAttribute("aria-expanded", String(!isOpen));
 });
+
+window.addEventListener("pagehide", () => endBackendSession(true));
+window.addEventListener("beforeunload", () => endBackendSession(true));
