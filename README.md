@@ -6,15 +6,15 @@ Um player de IPTV desenvolvido com **JavaScript puro no frontend** e **Node.js/E
 
 ## 🚀 Funcionalidades
 
-- 📡 **Carregar lista M3U via URL ou arquivo local:** cole o link da playlist ou faça upload direto do dispositivo.
-- 📁 **Playlists pré-definidas:** algumas listas já vêm junto (canais abertos do Brasil, CineTV, etc.) pra testar rapidinho.
-- 🧠 **Estratégia de reprodução automática:** o backend sonda o stream (via ffprobe) e escolhe a melhor abordagem — reprodução direta, proxy HTTP/HLS, remux ou transcodificação completa (vídeo, áudio ou ambos) — sem precisar de nada manual.
-- ⚡ **Aceleração por hardware:** detecta e usa NVENC/QuickSync/VAAPI/VideoToolbox/AMF quando disponíveis, caindo para libx264 (software) se nada for compatível.
-- 🩺 **Painel de diagnóstico (`/admin`):** mostra streams ativos, estratégia usada, status, viewers, PID e erros em tempo real, com ações administrativas.
-- ❤️ **Health check (`/api/health`):** status do FFmpeg/ffprobe, streams ativos, uso de disco, tudo em JSON.
-- 🧹 **Limpeza automática:** sessões e processos ociosos se encerram sozinhos, e os arquivos de stream são zerados a cada boot.
-- 🔒 **Validação de URLs:** bloqueia por padrão acesso a hosts privados/localhost, protegendo contra SSRF.
-- 🐳 **Pronto para Docker:** `Dockerfile` e `docker-compose.yml` inclusos, já com FFmpeg embutido na imagem.
+- **Carregar lista M3U via URL ou arquivo local:** cole o link da playlist ou faça upload direto do dispositivo.
+- **Playlists pré-definidas:** algumas listas já vêm junto (canais abertos do Brasil, CineTV, etc.) pra testar.
+- **Estratégia de reprodução automática:** o backend sonda o stream (via ffprobe) e escolhe a melhor abordagem, reprodução direta, proxy HTTP/HLS, remux ou transcodificação completa (vídeo, áudio ou ambos) - sem precisar de nada manual.
+- **Aceleração por hardware:** detecta e usa NVENC/QuickSync/VAAPI/VideoToolbox/AMF quando disponíveis, caindo para libx264 (software) se nada for compatível.
+- **Painel de diagnóstico (`/admin`):** mostra streams ativos, estratégia usada, status, viewers, PID e erros em tempo real, com ações administrativas.
+- **Health check (`/api/health`):** status do FFmpeg/ffprobe, streams ativos, uso de disco, tudo em JSON.
+- **Limpeza automática:** sessões e processos ociosos se encerram sozinhos, e os arquivos de stream são zerados a cada boot.
+- **Validação de URLs:** bloqueia por padrão acesso a hosts privados/localhost, protegendo contra SSRF.
+- **Pronto para Docker:** `Dockerfile` e `docker-compose.yml` inclusos, já com FFmpeg embutido na imagem.
 
 ---
 
