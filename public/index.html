@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
@@ -9,7 +9,15 @@
       name="description"
       content="IPTV Player - carregue sua lista M3U e assista aos seus canais."
     />
-    <title>IPTV Player</title>
+    <meta
+      name="keywords"
+      content="iptv, m3u, player, canais, tv, streaming, tvbox, assistir tv online, tv online grátis"
+    />
+    <meta
+      property="og:image"
+      content="https://deuplay.vercel.app/img/glenn-carstens-peters-EOQhsfFBhRk-unsplash.jpg"
+    />
+    <title>DeuPlay</title>
 
     <link rel="icon" type="image/x-icon" href="img/icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -30,7 +38,7 @@
       <div class="topbar__inner">
         <a class="brand" href="#" aria-label="IPTV Player - início">
           <img
-            src="img/Logo horizontal.png"
+            src="img/logo-deuplay.png"
             alt="IPTV Player"
             class="brand__logo"
             width="534"
@@ -50,15 +58,6 @@
         </button>
 
         <div class="topbar__menu" id="topbarMenu">
-          <nav class="topnav" aria-label="Listas prontas">
-            <button class="topnav__link" type="button" data-playlist="all">
-              Todos os Canais
-            </button>
-            <button class="topnav__link" type="button" data-playlist="br">
-              Canais Brasil
-            </button>
-          </nav>
-
           <div class="sources">
             <div class="field">
               <label class="sr-only" for="m3uUrl">URL da lista M3U</label>
@@ -92,10 +91,98 @@
               </label>
               <span class="filepick__name" id="fileName">Nenhum arquivo</span>
             </div>
+
+            <button
+              class="btn btn--ghost"
+              type="button"
+              id="btnXtreamOpen"
+              aria-controls="xtreamPanel"
+              aria-expanded="false"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" class="icon">
+                <path
+                  d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 0c-2.5 2.4-3.8 5.4-3.8 9s1.3 6.6 3.8 9m0-18c2.5 2.4 3.8 5.4 3.8 9s-1.3 6.6-3.8 9M3.4 9h17.2M3.4 15h17.2"
+                />
+              </svg>
+              Login Xtream
+            </button>
           </div>
         </div>
       </div>
     </header>
+
+    <div class="xtream" id="xtreamPanel" hidden>
+      <form class="xtream__form" id="xtreamForm" autocomplete="off">
+        <h2 class="xtream__title">Entrar com painel Xtream</h2>
+
+        <div id="xtreamCredentialFields">
+          <label class="xtream__label" for="xtreamHost">Servidor</label>
+          <input
+            class="field__input xtream__input"
+            type="text"
+            id="xtreamHost"
+            name="host"
+            placeholder="http://painel.exemplo.com:8080"
+            spellcheck="false"
+          />
+
+          <div class="xtream__row">
+            <div>
+              <label class="xtream__label" for="xtreamUser">Usuário</label>
+              <input
+                class="field__input xtream__input"
+                type="text"
+                id="xtreamUser"
+                name="username"
+                placeholder="Nome de usuário"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+            <div>
+              <label class="xtream__label" for="xtreamPass">Senha</label>
+              <input
+                class="field__input xtream__input"
+                type="password"
+                id="xtreamPass"
+                name="password"
+                placeholder="Senha"
+                autocomplete="off"
+              />
+            </div>
+          </div>
+        </div>
+
+        <label class="xtream__remember">
+          <input type="checkbox" id="xtreamRemember" />
+          <span> Lembrar de mim </span>
+        </label>
+
+        <div id="xtreamPassphraseBlock" hidden>
+          <label class="xtream__label" for="xtreamPassphrase">Senha de acesso rápido</label>
+          <input
+            class="field__input xtream__input"
+            type="password"
+            id="xtreamPassphrase"
+            autocomplete="off"
+          />
+          <p class="xtream__warn" id="xtreamPassphraseHint">
+            Na próxima vez, use apenas esta senha para entrar. Se esquecê-la, será necessário
+            digitar todos os dados novamente.
+          </p>
+        </div>
+
+        <p class="xtream__status" id="xtreamStatus" role="status" aria-live="polite"></p>
+
+        <div class="xtream__actions">
+          <button class="btn btn--ghost" type="button" id="btnXtreamForget" hidden>
+            Esquecer credenciais
+          </button>
+          <button class="btn btn--ghost" type="button" id="btnXtreamCancel">Cancelar</button>
+          <button class="btn btn--accent" type="submit" id="btnXtreamSubmit">Conectar</button>
+        </div>
+      </form>
+    </div>
 
     <main class="stage" id="stage">
       <section class="hero" id="hero">
@@ -103,14 +190,12 @@
         <div class="hero__content">
           <img
             class="hero__logo"
-            src="img/Logo horizontal.png"
+            src="img/logo-deuplay.png"
             width="534"
             height="141"
             alt="IPTV Player"
           />
-          <p class="hero__lead">
-            Adicione sua lista M3U para começar a assistir
-          </p>
+          <p class="hero__lead">Adicione sua lista M3U para começar a assistir</p>
 
           <div class="hero__actions">
             <button class="btn btn--accent btn--lg" type="button" id="heroUrl">
@@ -119,18 +204,6 @@
             <button class="btn btn--ghost btn--lg" type="button" id="heroFile">
               Abrir arquivo .m3u
             </button>
-          </div>
-
-          <div class="hero__quick">
-            <span class="hero__quick-label">ou comece por uma lista pronta</span>
-            <div class="hero__chips">
-              <button class="chip chip--action" type="button" data-playlist="all">
-                Todos os Canais
-              </button>
-              <button class="chip chip--action" type="button" data-playlist="br">
-                Canais Brasil
-              </button>
-            </div>
           </div>
         </div>
       </section>

@@ -1,12 +1,12 @@
-import { spawn } from "node:child_process";
-import fs from "node:fs/promises";
-import fsSync from "node:fs";
-import path from "node:path";
-import { config } from "../config.js";
-import { logger } from "../utils/logger.js";
-import { buildFfmpegArgs } from "./ffmpegArgs.js";
-import { detectEncoder } from "./hardware.js";
-import { classifyFfmpegLikeError, DiagnosticCode } from "./diagnostics.js";
+import { spawn } from 'node:child_process';
+import fs from 'node:fs/promises';
+import fsSync from 'node:fs';
+import path from 'node:path';
+import { config } from '../config.js';
+import { logger } from '../utils/logger.js';
+import { buildFfmpegArgs } from './ffmpegArgs.js';
+import { detectEncoder } from './hardware.js';
+import { classifyFfmpegLikeError, DiagnosticCode } from './diagnostics.js';
 
 const RESTART_BACKOFF_MS = [2000, 5000, 10000, 30000];
 const MAX_LOG_LINES = 200;
@@ -24,16 +24,16 @@ export async function checkFfmpegAvailable() {
   ffmpegAvailable = await new Promise((resolve) => {
     let proc;
     try {
-      proc = spawn(config.ffmpegPath, ["-version"], { shell: false });
+      proc = spawn(config.ffmpegPath, ['-version'], { shell: false });
     } catch {
       resolve(false);
       return;
     }
-    proc.on("error", () => resolve(false));
-    proc.on("close", (code) => resolve(code === 0));
+    proc.on('error', () => resolve(false));
+    proc.on('close', (code) => resolve(code === 0));
   });
   if (!ffmpegAvailable) {
-    logger.warn("ffmpeg_not_installed", { ffmpegPath: config.ffmpegPath });
+    logger.warn('ffmpeg_not_installed', { ffmpegPath: config.ffmpegPath });
   }
   return ffmpegAvailable;
 }
@@ -58,9 +58,9 @@ export async function startOrJoin(channelId, profile, { inputUrl, headers, media
   const key = processKey(channelId, profile);
 
   const existing = registry.get(key);
-  if (existing && ["starting", "ready", "degraded"].includes(existing.status)) {
+  if (existing && ['starting', 'ready', 'degraded'].includes(existing.status)) {
     if (viewerId) addViewer(key, viewerId);
-    if (existing.status === "starting" && existing.readyPromise) {
+    if (existing.status === 'starting' && existing.readyPromise) {
       await existing.readyPromise;
     }
     return toPublic(registry.get(key));
@@ -86,30 +86,28 @@ async function doStart(key, channelId, profile, { inputUrl, headers, mediaInfo, 
   const available = await checkFfmpegAvailable();
   if (!available) {
     const proc = createRecord(key, channelId, profile, { inputUrl, headers });
-    proc.status = "failed";
+    proc.status = 'failed';
     proc.lastError = DiagnosticCode.FFMPEG_NOT_INSTALLED;
     registry.set(key, proc);
     return proc;
   }
 
   const activeTranscodes = [...registry.values()].filter(
-    (p) => p.status === "ready" || p.status === "starting"
+    (p) => p.status === 'ready' || p.status === 'starting'
   ).length;
   if (activeTranscodes >= config.maxActiveStreams) {
     const proc = createRecord(key, channelId, profile, { inputUrl, headers });
-    proc.status = "failed";
+    proc.status = 'failed';
     proc.lastError = DiagnosticCode.RESOURCE_LIMIT;
     registry.set(key, proc);
     return proc;
   }
 
-  // O viewer entra no registro ANTES do spawn, nao depois do processo ficar
-  // pronto: com "-c:v copy" um FFmpeg pode terminar (EOF de uma origem
-  // curta) em poucas centenas de ms, antes que a chamada so pudesse
-  // registrar o viewer depois. Sem isso, handleExit via viewers.size===0 e
-  // trata uma sessao com espectador real como "ninguem estava assistindo".
+  // Viewer entra no registro ANTES do spawn: com "-c:v copy" o FFmpeg pode
+  // terminar em poucas centenas de ms (EOF de origem curta), e sem isso
+  // handleExit veria viewers.size===0 e descartaria um espectador real.
   const proc = createRecord(key, channelId, profile, { inputUrl, headers, mediaInfo, viewerId });
-  proc.status = "starting";
+  proc.status = 'starting';
   registry.set(key, proc);
 
   proc.readyPromise = launchAndWaitReady(proc);
@@ -122,7 +120,7 @@ function createRecord(key, channelId, profile, { inputUrl, headers, mediaInfo, v
     key,
     channelId,
     mode: profile,
-    status: "idle",
+    status: 'idle',
     pid: undefined,
     outputDirectory: path.join(config.streamsDir, sanitizeKey(key)),
     viewers: new Set(viewerId ? [viewerId] : []),
@@ -142,7 +140,7 @@ function createRecord(key, channelId, profile, { inputUrl, headers, mediaInfo, v
 }
 
 function sanitizeKey(key) {
-  return key.replace(/[^a-zA-Z0-9_-]/g, "_");
+  return key.replace(/[^a-zA-Z0-9_-]/g, '_');
 }
 
 async function launchAndWaitReady(proc) {
@@ -160,7 +158,7 @@ async function launchAndWaitReady(proc) {
     ffmpegLogLevel: config.ffmpegLogLevel,
   });
 
-  logger.info("ffmpeg_spawn", {
+  logger.info('ffmpeg_spawn', {
     key: proc.key,
     profile: proc.mode,
     encoder,
@@ -170,45 +168,50 @@ async function launchAndWaitReady(proc) {
 
   let child;
   try {
-    child = spawn(config.ffmpegPath, args, { shell: false, stdio: ["ignore", "pipe", "pipe"] });
+    child = spawn(config.ffmpegPath, args, { shell: false, stdio: ['ignore', 'pipe', 'pipe'] });
   } catch {
-    proc.status = "failed";
+    proc.status = 'failed';
     proc.lastError = DiagnosticCode.FFMPEG_NOT_INSTALLED;
-    logger.error("ffmpeg_spawn_failed", { key: proc.key, reason: DiagnosticCode.FFMPEG_NOT_INSTALLED });
+    logger.error('ffmpeg_spawn_failed', {
+      key: proc.key,
+      reason: DiagnosticCode.FFMPEG_NOT_INSTALLED,
+    });
     return proc;
   }
 
   proc.child = child;
   proc.pid = child.pid;
-  logger.info("ffmpeg_started", { key: proc.key, pid: child.pid, outputDirectory: proc.outputDirectory });
+  logger.info('ffmpeg_started', {
+    key: proc.key,
+    pid: child.pid,
+    outputDirectory: proc.outputDirectory,
+  });
 
-  child.stderr.on("data", (chunk) => appendLog(proc, chunk.toString()));
-  child.on("exit", (code, signal) => handleExit(proc, code, signal));
-  child.on("error", (err) => {
+  child.stderr.on('data', (chunk) => appendLog(proc, chunk.toString()));
+  child.on('exit', (code, signal) => handleExit(proc, code, signal));
+  child.on('error', (err) => {
     appendLog(proc, `spawn_error: ${err.message}`);
   });
 
   const ready = await waitForReadiness(proc);
   if (ready) {
-    proc.status = "ready";
+    proc.status = 'ready';
     proc.startedAt = Date.now();
     const segmentCount = countSegments(proc.outputDirectory);
-    logger.info("hls_ready", {
+    logger.info('hls_ready', {
       key: proc.key,
       pid: proc.pid,
-      playlist: path.join(proc.outputDirectory, "index.m3u8"),
+      playlist: path.join(proc.outputDirectory, 'index.m3u8'),
       segments: segmentCount,
     });
-  } else if (proc.status !== "stopped") {
-    const { code, detail } = classifyFfmpegLikeError(proc.logLines.join("\n"));
-    proc.status = "failed";
+  } else if (proc.status !== 'stopped') {
+    const { code, detail } = classifyFfmpegLikeError(proc.logLines.join('\n'));
+    proc.status = 'failed';
     proc.lastError = detail ? `${code}: ${detail}` : code;
-    logger.warn("hls_start_failed", { key: proc.key, reason: proc.lastError });
-    // Este kill e uma desistencia deliberada deste perfil (timeout de
-    // inicializacao), nao uma queda inesperada de um stream ao vivo: sem
-    // marcar intentionalStop, o "exit" assincrono do processo chegava depois
-    // do orquestrador ja ter avancado pro proximo perfil e era tratado como
-    // crash, disparando restart de um perfil que ninguem mais estava usando.
+    logger.warn('hls_start_failed', { key: proc.key, reason: proc.lastError });
+    // Kill deliberado (timeout de inicializacao), nao uma queda inesperada:
+    // sem intentionalStop, o "exit" assincrono chegava apos o orquestrador ja
+    // ter avancado de perfil e disparava restart de um perfil abandonado.
     proc.intentionalStop = true;
     killChild(proc);
   }
@@ -220,16 +223,16 @@ async function launchAndWaitReady(proc) {
 // restante do argv visivel para depuracao.
 function redactArgs(args) {
   const out = [...args];
-  const headersIndex = out.indexOf("-headers");
+  const headersIndex = out.indexOf('-headers');
   if (headersIndex !== -1 && out[headersIndex + 1] !== undefined) {
-    out[headersIndex + 1] = "<redacted>";
+    out[headersIndex + 1] = '<redacted>';
   }
   return out;
 }
 
 function countSegments(outputDirectory) {
   try {
-    return fsSync.readdirSync(outputDirectory).filter((f) => f.endsWith(".ts")).length;
+    return fsSync.readdirSync(outputDirectory).filter((f) => f.endsWith('.ts')).length;
   } catch {
     return 0;
   }
@@ -244,12 +247,12 @@ function appendLog(proc, text) {
 }
 
 function waitForReadiness(proc) {
-  const playlistPath = path.join(proc.outputDirectory, "index.m3u8");
+  const playlistPath = path.join(proc.outputDirectory, 'index.m3u8');
   const deadline = Date.now() + config.streamStartTimeoutMs;
 
   return new Promise((resolve) => {
     const check = () => {
-      if (proc.status === "stopped" || proc.status === "failed") {
+      if (proc.status === 'stopped' || proc.status === 'failed') {
         resolve(false);
         return;
       }
@@ -271,12 +274,12 @@ function isPlaylistReady(playlistPath) {
   try {
     const stat = fsSync.statSync(playlistPath);
     if (stat.size === 0) return false;
-    const content = fsSync.readFileSync(playlistPath, "utf8");
+    const content = fsSync.readFileSync(playlistPath, 'utf8');
     const hasSegmentRef = /\.ts(\?|$)/m.test(content);
     if (!hasSegmentRef) return false;
 
     const dir = path.dirname(playlistPath);
-    const segmentFiles = fsSync.readdirSync(dir).filter((f) => f.endsWith(".ts"));
+    const segmentFiles = fsSync.readdirSync(dir).filter((f) => f.endsWith('.ts'));
     return segmentFiles.some((f) => fsSync.statSync(path.join(dir, f)).size > 0);
   } catch {
     return false;
@@ -288,36 +291,55 @@ function handleExit(proc, code, signal) {
   proc.pid = undefined;
 
   if (proc.intentionalStop) {
-    logger.info("ffmpeg_stopped", { key: proc.key, pid, exitCode: code, signal, reason: "intentional_stop" });
-    proc.status = "stopped";
+    logger.info('ffmpeg_stopped', {
+      key: proc.key,
+      pid,
+      exitCode: code,
+      signal,
+      reason: 'intentional_stop',
+    });
+    proc.status = 'stopped';
     scheduleDirCleanup(proc);
     registry.delete(proc.key);
     return;
   }
 
   if (proc.viewers.size === 0) {
-    logger.info("ffmpeg_stopped", { key: proc.key, pid, exitCode: code, signal, reason: "no_viewers" });
-    proc.status = "stopped";
+    logger.info('ffmpeg_stopped', {
+      key: proc.key,
+      pid,
+      exitCode: code,
+      signal,
+      reason: 'no_viewers',
+    });
+    proc.status = 'stopped';
     scheduleDirCleanup(proc);
     registry.delete(proc.key);
     return;
   }
 
   // Saida limpa (codigo 0, sem sinal) e o EOF natural de uma origem finita
-  // (VOD, arquivo, fixture de teste) - nao e uma falha, entao nao deve
-  // disparar o backoff de restart pensado para quedas de origens ao vivo.
+  // (VOD/arquivo) - nao deve disparar o backoff pensado para quedas ao vivo.
   if (code === 0 && !signal) {
-    logger.info("ffmpeg_stopped", { key: proc.key, pid, exitCode: code, reason: "source_ended" });
-    proc.status = "stopped";
+    logger.info('ffmpeg_stopped', { key: proc.key, pid, exitCode: code, reason: 'source_ended' });
+    proc.status = 'stopped';
     scheduleDirCleanup(proc);
     registry.delete(proc.key);
     return;
   }
 
-  proc.status = "degraded";
-  const { code: diagCode, detail } = classifyFfmpegLikeError(proc.logLines.join("\n"), code ?? undefined);
+  proc.status = 'degraded';
+  const { code: diagCode, detail } = classifyFfmpegLikeError(
+    proc.logLines.join('\n'),
+    code ?? undefined
+  );
   proc.lastError = detail ? `${diagCode}: ${detail}` : diagCode;
-  logger.warn("ffmpeg_exit_unexpected", { key: proc.key, code, signal, viewers: proc.viewers.size });
+  logger.warn('ffmpeg_exit_unexpected', {
+    key: proc.key,
+    code,
+    signal,
+    viewers: proc.viewers.size,
+  });
   scheduleRestart(proc);
 }
 
@@ -328,8 +350,8 @@ function scheduleRestart(proc) {
   );
 
   if (proc.restartTimestamps.length >= config.streamRestartLimit) {
-    proc.status = "failed";
-    proc.lastError = "restart_limit_exceeded: numero maximo de reinicializacoes atingido.";
+    proc.status = 'failed';
+    proc.lastError = 'restart_limit_exceeded: numero maximo de reinicializacoes atingido.';
     scheduleDirCleanup(proc);
     return;
   }
@@ -341,7 +363,7 @@ function scheduleRestart(proc) {
 
   setTimeout(async () => {
     if (!registry.has(proc.key) || proc.viewers.size === 0) return;
-    proc.status = "starting";
+    proc.status = 'starting';
     proc.readyPromise = launchAndWaitReady(proc);
     await proc.readyPromise;
   }, delay);
@@ -377,7 +399,7 @@ export function forceRestart(key) {
   const proc = registry.get(key);
   if (!proc) return false;
   proc.restartTimestamps = [];
-  proc.viewers.add("__admin_forced__");
+  proc.viewers.add('__admin_forced__');
   killChild(proc);
   return true;
 }
@@ -385,9 +407,9 @@ export function forceRestart(key) {
 function killChild(proc) {
   if (!proc.child) return;
   try {
-    proc.child.kill("SIGTERM");
+    proc.child.kill('SIGTERM');
     setTimeout(() => {
-      if (proc.child && !proc.child.killed) proc.child.kill("SIGKILL");
+      if (proc.child && !proc.child.killed) proc.child.kill('SIGKILL');
     }, 3000);
   } catch {
     // Processo ja pode ter encerrado entre a checagem e o kill.
@@ -398,7 +420,7 @@ async function scheduleDirCleanup(proc) {
   try {
     await fs.rm(proc.outputDirectory, { recursive: true, force: true });
   } catch (err) {
-    logger.warn("cleanup_failed", { key: proc.key, error: err.message });
+    logger.warn('cleanup_failed', { key: proc.key, error: err.message });
   }
 }
 
@@ -408,10 +430,10 @@ export function startIdleSweep() {
     const now = Date.now();
     for (const proc of registry.values()) {
       if (proc.viewers.size > 0) continue;
-      if (!["ready", "degraded"].includes(proc.status)) continue;
+      if (!['ready', 'degraded'].includes(proc.status)) continue;
       if (now - proc.lastViewerAt > config.streamIdleTimeoutMs) {
-        logger.info("stream_idle_stop", { key: proc.key });
-        stopProcess(proc.key, "idle_timeout");
+        logger.info('stream_idle_stop', { key: proc.key });
+        stopProcess(proc.key, 'idle_timeout');
       }
     }
   }, 5000);

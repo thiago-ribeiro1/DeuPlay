@@ -1,7 +1,7 @@
-import { newId } from "./utils/ids.js";
-import { config } from "./config.js";
-import { logger } from "./utils/logger.js";
-import * as processManager from "./services/processManager.js";
+import { newId } from './utils/ids.js';
+import { config } from './config.js';
+import { logger } from './utils/logger.js';
+import * as processManager from './services/processManager.js';
 
 /** Armazenamento inteiramente em memoria: uma unica instancia, um unico usuario. */
 const playlists = new Map();
@@ -18,7 +18,7 @@ export function importPlaylist({ name, sourceType, sourceRef, parsed }) {
 
   const record = {
     id,
-    name: name || sourceRef || "Playlist",
+    name: name || sourceRef || 'Playlist',
     sourceType,
     sourceRef,
     channelIds: parsed.channels.map((c) => c.id),
@@ -28,7 +28,11 @@ export function importPlaylist({ name, sourceType, sourceRef, parsed }) {
     importedAt: now,
   };
   playlists.set(id, record);
-  logger.info("playlist_imported", { id, channels: record.channelIds.length, duplicates: record.duplicates });
+  logger.info('playlist_imported', {
+    id,
+    channels: record.channelIds.length,
+    duplicates: record.duplicates,
+  });
   return record;
 }
 
@@ -62,7 +66,7 @@ export function upsertAdHocChannel({ name, sourceUrl, sourceHeaders, id }) {
   const channel = existing || {
     id: id || newId(),
     name: name || sourceUrl,
-    group: "Avulso",
+    group: 'Avulso',
     sourceUrl,
     sourceHeaders,
     enabled: true,
@@ -131,13 +135,13 @@ export function startSessionSweep() {
   return setInterval(() => {
     const now = Date.now();
     for (const session of sessions.values()) {
-      if (session.status === "expired") continue;
+      if (session.status === 'expired') continue;
       if (now > session.expiresAt) {
-        session.status = "expired";
+        session.status = 'expired';
         if (session.processKey) {
           processManager.removeViewer(session.processKey, session.viewerId);
         }
-        logger.info("session_expired", { id: session.id, channelId: session.channelId });
+        logger.info('session_expired', { id: session.id, channelId: session.channelId });
       }
     }
   }, 5000);

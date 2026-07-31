@@ -1,4 +1,4 @@
-import { config } from "../config.js";
+import { config } from '../config.js';
 
 // Faixas privadas/loopback/link-local: bloqueadas por padrao para reduzir risco de SSRF
 // contra a propria maquina ou rede local a partir de uma URL fornecida pelo usuario.
@@ -8,35 +8,35 @@ const BLOCKED_HOST_PATTERN =
 export class UrlValidationError extends Error {
   constructor(code, message) {
     super(message);
-    this.name = "UrlValidationError";
+    this.name = 'UrlValidationError';
     this.code = code;
   }
 }
 
 export function validateSourceUrl(raw) {
-  if (!raw || typeof raw !== "string") {
-    throw new UrlValidationError("empty_url", "Nenhuma URL foi informada.");
+  if (!raw || typeof raw !== 'string') {
+    throw new UrlValidationError('empty_url', 'Nenhuma URL foi informada.');
   }
 
   let target;
   try {
     target = new URL(raw);
   } catch {
-    throw new UrlValidationError("invalid_url", "A URL informada nao pode ser interpretada.");
+    throw new UrlValidationError('invalid_url', 'A URL informada nao pode ser interpretada.');
   }
 
-  const protocol = target.protocol.replace(":", "").toLowerCase();
+  const protocol = target.protocol.replace(':', '').toLowerCase();
   if (!config.allowedStreamProtocols.includes(protocol)) {
     throw new UrlValidationError(
-      "protocol_not_allowed",
+      'protocol_not_allowed',
       `Protocolo "${protocol}" nao esta na lista ALLOWED_STREAM_PROTOCOLS.`
     );
   }
 
   if (!config.allowPrivateHosts && BLOCKED_HOST_PATTERN.test(target.hostname)) {
     throw new UrlValidationError(
-      "host_not_allowed",
-      "O host de destino aponta para rede local/privada e esta bloqueado por padrao."
+      'host_not_allowed',
+      'O host de destino aponta para rede local/privada e esta bloqueado por padrao.'
     );
   }
 

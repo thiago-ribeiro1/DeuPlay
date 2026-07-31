@@ -1,6 +1,6 @@
-import { spawn } from "node:child_process";
-import { config } from "../config.js";
-import { DiagnosticCode, classifyFfmpegLikeError } from "./diagnostics.js";
+import { spawn } from 'node:child_process';
+import { config } from '../config.js';
+import { DiagnosticCode, classifyFfmpegLikeError } from './diagnostics.js';
 
 const MAX_LOG_BYTES = 8000;
 
@@ -11,13 +11,13 @@ export async function checkFfprobeAvailable() {
   ffprobeAvailable = await new Promise((resolve) => {
     let proc;
     try {
-      proc = spawn(config.ffprobePath, ["-version"], { shell: false });
+      proc = spawn(config.ffprobePath, ['-version'], { shell: false });
     } catch {
       resolve(false);
       return;
     }
-    proc.on("error", () => resolve(false));
-    proc.on("close", (code) => resolve(code === 0));
+    proc.on('error', () => resolve(false));
+    proc.on('close', (code) => resolve(code === 0));
   });
   return ffprobeAvailable;
 }
@@ -32,14 +32,14 @@ export async function probeSource(url, { headers = {}, timeoutMs = config.probeT
 
   let proc;
   try {
-    proc = spawn(config.ffprobePath, args, { shell: false, stdio: ["ignore", "pipe", "pipe"] });
+    proc = spawn(config.ffprobePath, args, { shell: false, stdio: ['ignore', 'pipe', 'pipe'] });
   } catch (err) {
     return notReachable(spawnErrorCode(err), Date.now() - start);
   }
 
   return new Promise((resolve) => {
-    let stdout = "";
-    let stderr = "";
+    let stdout = '';
+    let stderr = '';
     let settled = false;
 
     const finish = (result) => {
@@ -50,22 +50,22 @@ export async function probeSource(url, { headers = {}, timeoutMs = config.probeT
     };
 
     const timer = setTimeout(() => {
-      proc.kill("SIGKILL");
+      proc.kill('SIGKILL');
       finish(notReachable(DiagnosticCode.TIMEOUT, Date.now() - start));
     }, timeoutMs);
 
-    proc.stdout.on("data", (chunk) => {
+    proc.stdout.on('data', (chunk) => {
       if (stdout.length < MAX_LOG_BYTES) stdout += chunk.toString();
     });
-    proc.stderr.on("data", (chunk) => {
+    proc.stderr.on('data', (chunk) => {
       if (stderr.length < MAX_LOG_BYTES) stderr += chunk.toString();
     });
 
-    proc.on("error", (err) => {
+    proc.on('error', (err) => {
       finish(notReachable(spawnErrorCode(err), Date.now() - start));
     });
 
-    proc.on("close", (exitCode) => {
+    proc.on('close', (exitCode) => {
       const probeDurationMs = Date.now() - start;
       if (exitCode !== 0) {
         const { code, detail } = classifyFfmpegLikeError(stderr, exitCode);
@@ -83,31 +83,33 @@ export async function probeSource(url, { headers = {}, timeoutMs = config.probeT
 }
 
 function spawnErrorCode(err) {
-  return err.code === "ENOENT" ? DiagnosticCode.FFPROBE_NOT_INSTALLED : DiagnosticCode.UNKNOWN_ERROR;
+  return err.code === 'ENOENT'
+    ? DiagnosticCode.FFPROBE_NOT_INSTALLED
+    : DiagnosticCode.UNKNOWN_ERROR;
 }
 
 function buildProbeArgs(url, headers, timeoutMs) {
   const args = [
-    "-hide_banner",
-    "-loglevel",
-    "error",
-    "-print_format",
-    "json",
-    "-show_format",
-    "-show_streams",
-    "-analyzeduration",
-    "5000000",
-    "-probesize",
-    "5000000",
+    '-hide_banner',
+    '-loglevel',
+    'error',
+    '-print_format',
+    'json',
+    '-show_format',
+    '-show_streams',
+    '-analyzeduration',
+    '5000000',
+    '-probesize',
+    '5000000',
   ];
 
   if (/^https?:/i.test(url)) {
-    args.push("-rw_timeout", String(timeoutMs * 1000));
+    args.push('-rw_timeout', String(timeoutMs * 1000));
     if (headers && Object.keys(headers).length) {
       const headerLines = Object.entries(headers)
         .map(([key, value]) => `${key}: ${value}`)
-        .join("\r\n");
-      args.push("-headers", headerLines + "\r\n");
+        .join('\r\n');
+      args.push('-headers', headerLines + '\r\n');
     }
   }
 
@@ -128,8 +130,8 @@ function notReachable(code, probeDurationMs, detail) {
 
 function normalizeProbeResult(parsed, probeDurationMs) {
   const streams = Array.isArray(parsed.streams) ? parsed.streams : [];
-  const videoStream = streams.find((s) => s.codec_type === "video");
-  const audioStream = streams.find((s) => s.codec_type === "audio");
+  const videoStream = streams.find((s) => s.codec_type === 'video');
+  const audioStream = streams.find((s) => s.codec_type === 'audio');
   const format = parsed.format || {};
 
   const errors = [];
@@ -159,17 +161,17 @@ function normalizeProbeResult(parsed, probeDurationMs) {
 
 function detectProtocol(formatName) {
   if (!formatName) return undefined;
-  if (/hls|applehttp/i.test(formatName)) return "hls";
-  if (/mpegts/i.test(formatName)) return "mpegts";
-  if (/mp4|mov/i.test(formatName)) return "mp4";
-  if (/rtsp/i.test(formatName)) return "rtsp";
-  if (/rtmp/i.test(formatName)) return "rtmp";
+  if (/hls|applehttp/i.test(formatName)) return 'hls';
+  if (/mpegts/i.test(formatName)) return 'mpegts';
+  if (/mp4|mov/i.test(formatName)) return 'mp4';
+  if (/rtsp/i.test(formatName)) return 'rtsp';
+  if (/rtmp/i.test(formatName)) return 'rtmp';
   return formatName;
 }
 
 function parseFrameRate(value) {
-  if (!value || typeof value !== "string") return undefined;
-  const [num, den] = value.split("/").map(Number);
+  if (!value || typeof value !== 'string') return undefined;
+  const [num, den] = value.split('/').map(Number);
   if (!den) return num || undefined;
   return Math.round((num / den) * 100) / 100;
 }

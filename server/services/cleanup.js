@@ -1,18 +1,20 @@
-import fs from "node:fs/promises";
-import fsSync from "node:fs";
-import path from "node:path";
-import { config } from "../config.js";
-import { logger } from "../utils/logger.js";
+import fs from 'node:fs/promises';
+import fsSync from 'node:fs';
+import path from 'node:path';
+import { config } from '../config.js';
+import { logger } from '../utils/logger.js';
 
 /** Remove qualquer diretorio de stream deixado por uma execucao anterior (orfaos). */
 export async function wipeStreamsOnBoot() {
   await fs.mkdir(config.streamsDir, { recursive: true });
-  const entries = (await fs.readdir(config.streamsDir)).filter((entry) => entry !== ".gitkeep");
+  const entries = (await fs.readdir(config.streamsDir)).filter((entry) => entry !== '.gitkeep');
   await Promise.all(
-    entries.map((entry) => fs.rm(path.join(config.streamsDir, entry), { recursive: true, force: true }))
+    entries.map((entry) =>
+      fs.rm(path.join(config.streamsDir, entry), { recursive: true, force: true })
+    )
   );
   if (entries.length) {
-    logger.info("orphan_streams_cleared", { count: entries.length });
+    logger.info('orphan_streams_cleared', { count: entries.length });
   }
 }
 

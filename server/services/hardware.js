@@ -1,15 +1,15 @@
-import { spawn } from "node:child_process";
-import { config } from "../config.js";
-import { logger } from "../utils/logger.js";
+import { spawn } from 'node:child_process';
+import { config } from '../config.js';
+import { logger } from '../utils/logger.js';
 
 // Perfis candidatos em ordem de preferencia; cada um mapeia para o encoder
 // FFmpeg equivalente. libx264 (software) e sempre o fallback final.
 const CANDIDATES = [
-  { id: "h264_nvenc", vendor: "NVIDIA NVENC" },
-  { id: "h264_qsv", vendor: "Intel Quick Sync" },
-  { id: "h264_vaapi", vendor: "VAAPI" },
-  { id: "h264_videotoolbox", vendor: "Apple VideoToolbox" },
-  { id: "h264_amf", vendor: "AMD AMF" },
+  { id: 'h264_nvenc', vendor: 'NVIDIA NVENC' },
+  { id: 'h264_qsv', vendor: 'Intel Quick Sync' },
+  { id: 'h264_vaapi', vendor: 'VAAPI' },
+  { id: 'h264_videotoolbox', vendor: 'Apple VideoToolbox' },
+  { id: 'h264_amf', vendor: 'AMD AMF' },
 ];
 
 let cachedEncoder = null;
@@ -23,14 +23,14 @@ let cachedEncoder = null;
 export async function detectEncoder() {
   if (cachedEncoder) return cachedEncoder;
 
-  if (config.hardwareAcceleration === "off") {
-    cachedEncoder = { encoder: "libx264", hardware: false, vendor: "software" };
+  if (config.hardwareAcceleration === 'off') {
+    cachedEncoder = { encoder: 'libx264', hardware: false, vendor: 'software' };
     return cachedEncoder;
   }
 
   const available = await listAvailableEncoders();
   if (!available) {
-    cachedEncoder = { encoder: "libx264", hardware: false, vendor: "software" };
+    cachedEncoder = { encoder: 'libx264', hardware: false, vendor: 'software' };
     return cachedEncoder;
   }
 
@@ -38,13 +38,13 @@ export async function detectEncoder() {
     if (!available.has(candidate.id)) continue;
     const works = await testEncoder(candidate.id);
     if (works) {
-      logger.info("hardware_encoder_selected", { encoder: candidate.id, vendor: candidate.vendor });
+      logger.info('hardware_encoder_selected', { encoder: candidate.id, vendor: candidate.vendor });
       cachedEncoder = { encoder: candidate.id, hardware: true, vendor: candidate.vendor };
       return cachedEncoder;
     }
   }
 
-  cachedEncoder = { encoder: "libx264", hardware: false, vendor: "software" };
+  cachedEncoder = { encoder: 'libx264', hardware: false, vendor: 'software' };
   return cachedEncoder;
 }
 
@@ -52,15 +52,15 @@ function listAvailableEncoders() {
   return new Promise((resolve) => {
     let proc;
     try {
-      proc = spawn(config.ffmpegPath, ["-hide_banner", "-encoders"], { shell: false });
+      proc = spawn(config.ffmpegPath, ['-hide_banner', '-encoders'], { shell: false });
     } catch {
       resolve(null);
       return;
     }
-    let stdout = "";
-    proc.stdout.on("data", (chunk) => (stdout += chunk.toString()));
-    proc.on("error", () => resolve(null));
-    proc.on("close", (code) => {
+    let stdout = '';
+    proc.stdout.on('data', (chunk) => (stdout += chunk.toString()));
+    proc.on('error', () => resolve(null));
+    proc.on('close', (code) => {
       if (code !== 0) {
         resolve(null);
         return;
@@ -83,20 +83,20 @@ function testEncoder(encoderId) {
       proc = spawn(
         config.ffmpegPath,
         [
-          "-hide_banner",
-          "-loglevel",
-          "error",
-          "-f",
-          "lavfi",
-          "-i",
-          "color=c=black:s=64x64:d=0.1",
-          "-frames:v",
-          "1",
-          "-c:v",
+          '-hide_banner',
+          '-loglevel',
+          'error',
+          '-f',
+          'lavfi',
+          '-i',
+          'color=c=black:s=64x64:d=0.1',
+          '-frames:v',
+          '1',
+          '-c:v',
           encoderId,
-          "-f",
-          "null",
-          "-",
+          '-f',
+          'null',
+          '-',
         ],
         { shell: false }
       );
@@ -106,15 +106,15 @@ function testEncoder(encoderId) {
     }
 
     const timer = setTimeout(() => {
-      proc.kill("SIGKILL");
+      proc.kill('SIGKILL');
       resolve(false);
     }, 5000);
 
-    proc.on("error", () => {
+    proc.on('error', () => {
       clearTimeout(timer);
       resolve(false);
     });
-    proc.on("close", (code) => {
+    proc.on('close', (code) => {
       clearTimeout(timer);
       resolve(code === 0);
     });

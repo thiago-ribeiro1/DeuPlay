@@ -1,48 +1,129 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>IPTV Player - Diagnóstico</title>
     <style>
-      :root { color-scheme: dark; }
-      * { box-sizing: border-box; }
+      :root {
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
       body {
         margin: 0;
-        font-family: "Inter", system-ui, sans-serif;
+        font-family: 'Inter', system-ui, sans-serif;
         background: #0b1120;
         color: #e5e9f2;
         padding: 24px;
       }
-      h1 { font-size: 1.3rem; margin: 0 0 4px; }
-      .sub { color: #8b93a7; margin: 0 0 20px; font-size: 0.9rem; }
+      h1 {
+        font-size: 1.3rem;
+        margin: 0 0 4px;
+      }
+      .sub {
+        color: #8b93a7;
+        margin: 0 0 20px;
+        font-size: 0.9rem;
+      }
       .health {
-        display: flex; gap: 16px; flex-wrap: wrap;
-        background: #131b2e; border: 1px solid #232d45;
-        border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; font-size: 0.85rem;
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        background: #131b2e;
+        border: 1px solid #232d45;
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        font-size: 0.85rem;
       }
-      .health span b { color: #fff; }
-      table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-      th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #1c2438; white-space: nowrap; }
-      th { color: #8b93a7; font-weight: 500; position: sticky; top: 0; background: #0b1120; }
-      tr:hover td { background: #101828; }
-      .status { padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
-      .status-ready { background: #10331f; color: #4ade80; }
-      .status-degraded { background: #33290a; color: #fbbf24; }
-      .status-failed { background: #3a1111; color: #f87171; }
-      .status-starting { background: #10233a; color: #60a5fa; }
-      .err { color: #f87171; max-width: 260px; white-space: normal; overflow-wrap: anywhere; }
+      .health span b {
+        color: #fff;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid #1c2438;
+        white-space: nowrap;
+      }
+      th {
+        color: #8b93a7;
+        font-weight: 500;
+        position: sticky;
+        top: 0;
+        background: #0b1120;
+      }
+      tr:hover td {
+        background: #101828;
+      }
+      .status {
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 600;
+      }
+      .status-ready {
+        background: #10331f;
+        color: #4ade80;
+      }
+      .status-degraded {
+        background: #33290a;
+        color: #fbbf24;
+      }
+      .status-failed {
+        background: #3a1111;
+        color: #f87171;
+      }
+      .status-starting {
+        background: #10233a;
+        color: #60a5fa;
+      }
+      .err {
+        color: #f87171;
+        max-width: 260px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
       button {
-        background: #1c2438; color: #e5e9f2; border: 1px solid #2c3654;
-        border-radius: 6px; padding: 4px 8px; font-size: 0.75rem; cursor: pointer; margin-right: 4px;
+        background: #1c2438;
+        color: #e5e9f2;
+        border: 1px solid #2c3654;
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        margin-right: 4px;
       }
-      button:hover { background: #232d45; }
+      button:hover {
+        background: #232d45;
+      }
       pre {
-        background: #05070d; border: 1px solid #1c2438; border-radius: 8px;
-        padding: 12px; max-height: 300px; overflow: auto; font-size: 0.78rem; white-space: pre-wrap;
+        background: #05070d;
+        border: 1px solid #1c2438;
+        border-radius: 8px;
+        padding: 12px;
+        max-height: 300px;
+        overflow: auto;
+        font-size: 0.78rem;
+        white-space: pre-wrap;
       }
-      .empty { color: #8b93a7; padding: 20px; text-align: center; }
-      .tablewrap { overflow-x: auto; border: 1px solid #1c2438; border-radius: 10px; }
+      .empty {
+        color: #8b93a7;
+        padding: 20px;
+        text-align: center;
+      }
+      .tablewrap {
+        overflow-x: auto;
+        border: 1px solid #1c2438;
+        border-radius: 10px;
+      }
     </style>
   </head>
   <body>
@@ -55,106 +136,164 @@
       <table>
         <thead>
           <tr>
-            <th>Canal</th><th>Grupo</th><th>Estratégia</th><th>Status</th>
-            <th>Vídeo→Saída</th><th>Res.</th><th>Viewers</th><th>PID</th>
-            <th>Uptime</th><th>Último erro</th><th>Ações</th>
+            <th>Canal</th>
+            <th>Grupo</th>
+            <th>Estratégia</th>
+            <th>Status</th>
+            <th>Vídeo→Saída</th>
+            <th>Res.</th>
+            <th>Viewers</th>
+            <th>PID</th>
+            <th>Uptime</th>
+            <th>Último erro</th>
+            <th>Ações</th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
       </table>
     </div>
-    <p class="empty" id="emptyMsg" hidden>Nenhum stream ativo no momento. Reproduza um canal para vê-lo aqui.</p>
+    <p class="empty" id="emptyMsg" hidden>
+      Nenhum stream ativo no momento. Reproduza um canal para vê-lo aqui.
+    </p>
 
     <pre id="logs" hidden></pre>
 
     <script>
-      const rowsEl = document.getElementById("rows");
-      const healthEl = document.getElementById("health");
-      const emptyEl = document.getElementById("emptyMsg");
-      const logsEl = document.getElementById("logs");
+      const rowsEl = document.getElementById('rows');
+      const healthEl = document.getElementById('health');
+      const emptyEl = document.getElementById('emptyMsg');
+      const logsEl = document.getElementById('logs');
 
       function fmtUptime(startedAt) {
-        if (!startedAt) return "—";
+        if (!startedAt) return '—';
         const sec = Math.round((Date.now() - startedAt) / 1000);
         const m = Math.floor(sec / 60);
         const s = sec % 60;
-        return m + "m " + s + "s";
+        return m + 'm ' + s + 's';
       }
 
       async function refreshHealth() {
         try {
-          const health = await fetch("/api/health").then((r) => r.json());
+          const health = await fetch('/api/health').then((r) => r.json());
           healthEl.innerHTML =
-            "<span>Status: <b>" + health.status + "</b></span>" +
-            "<span>FFmpeg: <b>" + (health.ffmpegAvailable ? "ok" : "ausente") + "</b></span>" +
-            "<span>ffprobe: <b>" + (health.ffprobeAvailable ? "ok" : "ausente") + "</b></span>" +
-            "<span>Streams ativos: <b>" + health.activeStreams + "/" + health.maxActiveStreams + "</b></span>" +
-            "<span>Disco (media/streams): <b>" + Math.round(health.diskUsageBytes / 1024) + " KB</b></span>" +
-            (health.warnings.length ? "<span style='color:#f87171'>" + health.warnings.join(" · ") + "</span>" : "");
+            '<span>Status: <b>' +
+            health.status +
+            '</b></span>' +
+            '<span>FFmpeg: <b>' +
+            (health.ffmpegAvailable ? 'ok' : 'ausente') +
+            '</b></span>' +
+            '<span>ffprobe: <b>' +
+            (health.ffprobeAvailable ? 'ok' : 'ausente') +
+            '</b></span>' +
+            '<span>Streams ativos: <b>' +
+            health.activeStreams +
+            '/' +
+            health.maxActiveStreams +
+            '</b></span>' +
+            '<span>Disco (media/streams): <b>' +
+            Math.round(health.diskUsageBytes / 1024) +
+            ' KB</b></span>' +
+            (health.warnings.length
+              ? "<span style='color:#f87171'>" + health.warnings.join(' · ') + '</span>'
+              : '');
         } catch {
-          healthEl.textContent = "Não foi possível consultar /api/health.";
+          healthEl.textContent = 'Não foi possível consultar /api/health.';
         }
       }
 
       async function refreshStreams() {
         let streams = [];
         try {
-          streams = await fetch("/api/streams").then((r) => r.json());
+          streams = await fetch('/api/streams').then((r) => r.json());
         } catch {
           return;
         }
 
         emptyEl.hidden = streams.length > 0;
-        rowsEl.innerHTML = "";
+        rowsEl.innerHTML = '';
 
         streams.forEach((s) => {
-          const tr = document.createElement("tr");
+          const tr = document.createElement('tr');
           const mi = s.mediaInfo || {};
           tr.innerHTML =
-            "<td>" + escapeHtml(s.channelName || s.channelId) + "</td>" +
-            "<td>" + escapeHtml(s.channelGroup || "") + "</td>" +
-            "<td>" + escapeHtml(s.mode) + "</td>" +
-            "<td><span class='status status-" + s.status + "'>" + s.status + "</span></td>" +
-            "<td>" + escapeHtml(mi.videoCodec || "?") + " → " + (s.mode === "remux" ? escapeHtml(mi.videoCodec || "?") : "h264") + "</td>" +
-            "<td>" + (mi.width ? mi.width + "x" + mi.height : "—") + "</td>" +
-            "<td>" + s.viewers + "</td>" +
-            "<td>" + (s.pid || "—") + "</td>" +
-            "<td>" + fmtUptime(s.startedAt) + "</td>" +
-            "<td class='err'>" + escapeHtml(s.lastError || "") + "</td>" +
-            "<td></td>";
+            '<td>' +
+            escapeHtml(s.channelName || s.channelId) +
+            '</td>' +
+            '<td>' +
+            escapeHtml(s.channelGroup || '') +
+            '</td>' +
+            '<td>' +
+            escapeHtml(s.mode) +
+            '</td>' +
+            "<td><span class='status status-" +
+            s.status +
+            "'>" +
+            s.status +
+            '</span></td>' +
+            '<td>' +
+            escapeHtml(mi.videoCodec || '?') +
+            ' → ' +
+            (s.mode === 'remux' ? escapeHtml(mi.videoCodec || '?') : 'h264') +
+            '</td>' +
+            '<td>' +
+            (mi.width ? mi.width + 'x' + mi.height : '—') +
+            '</td>' +
+            '<td>' +
+            s.viewers +
+            '</td>' +
+            '<td>' +
+            (s.pid || '—') +
+            '</td>' +
+            '<td>' +
+            fmtUptime(s.startedAt) +
+            '</td>' +
+            "<td class='err'>" +
+            escapeHtml(s.lastError || '') +
+            '</td>' +
+            '<td></td>';
 
           const actionsCell = tr.lastElementChild;
-          actionsCell.appendChild(button("Logs", () => showLogs(s.key)));
-          actionsCell.appendChild(button("Reiniciar", () => action(s.key, "restart")));
-          actionsCell.appendChild(button("Parar", () => action(s.key, "stop")));
+          actionsCell.appendChild(button('Logs', () => showLogs(s.key)));
+          actionsCell.appendChild(button('Reiniciar', () => action(s.key, 'restart')));
+          actionsCell.appendChild(button('Parar', () => action(s.key, 'stop')));
 
           rowsEl.appendChild(tr);
         });
       }
 
       function button(label, onClick) {
-        const btn = document.createElement("button");
-        btn.type = "button";
+        const btn = document.createElement('button');
+        btn.type = 'button';
         btn.textContent = label;
-        btn.addEventListener("click", onClick);
+        btn.addEventListener('click', onClick);
         return btn;
       }
 
       async function action(key, kind) {
-        await fetch("/api/streams/" + encodeURIComponent(key) + "/" + kind, { method: "POST" });
+        await fetch('/api/streams/' + encodeURIComponent(key) + '/' + kind, { method: 'POST' });
         refreshStreams();
       }
 
       async function showLogs(key) {
-        const data = await fetch("/api/streams/" + encodeURIComponent(key) + "/logs").then((r) => r.json());
+        const data = await fetch('/api/streams/' + encodeURIComponent(key) + '/logs').then((r) =>
+          r.json()
+        );
         logsEl.hidden = false;
-        logsEl.textContent = "== " + key + " ==\n" + (data.lines || []).join("\n");
+        logsEl.textContent = '== ' + key + ' ==\n' + (data.lines || []).join('\n');
       }
 
       function escapeHtml(value) {
-        return String(value).replace(/[&<>"']/g, (c) => ({
-          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-        }[c]));
+        return String(value).replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              '&': '&amp;',
+              '<': '&lt;',
+              '>': '&gt;',
+              '"': '&quot;',
+              "'": '&#39;',
+            })[c]
+        );
       }
 
       refreshHealth();

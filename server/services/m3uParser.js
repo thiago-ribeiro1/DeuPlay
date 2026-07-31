@@ -1,4 +1,4 @@
-import { stableChannelId } from "../utils/ids.js";
+import { stableChannelId } from '../utils/ids.js';
 
 /**
  * @typedef {Object} Channel
@@ -19,7 +19,7 @@ import { stableChannelId } from "../utils/ids.js";
 export class M3uParseError extends Error {
   constructor(message) {
     super(message);
-    this.name = "M3uParseError";
+    this.name = 'M3uParseError';
   }
 }
 
@@ -30,15 +30,15 @@ export class M3uParseError extends Error {
  * @param {{maxChannels?: number}} [options]
  */
 export function parseM3U(rawText, options = {}) {
-  if (typeof rawText !== "string" || !rawText.trim()) {
-    throw new M3uParseError("Conteudo da playlist esta vazio.");
+  if (typeof rawText !== 'string' || !rawText.trim()) {
+    throw new M3uParseError('Conteudo da playlist esta vazio.');
   }
 
   const text = stripBom(rawText);
   const lines = text.split(/\r\n|\r|\n/);
   const maxChannels = options.maxChannels ?? Infinity;
 
-  if (!lines.some((line) => line.trim().startsWith("#EXTM3U"))) {
+  if (!lines.some((line) => line.trim().startsWith('#EXTM3U'))) {
     throw new M3uParseError('Playlist invalida: cabecalho "#EXTM3U" nao encontrado.');
   }
 
@@ -54,29 +54,29 @@ export function parseM3U(rawText, options = {}) {
     const line = lines[i].trim();
     if (!line) continue;
 
-    if (line.startsWith("#EXTM3U")) continue;
+    if (line.startsWith('#EXTM3U')) continue;
 
-    if (line.startsWith("#EXTINF")) {
+    if (line.startsWith('#EXTINF')) {
       pendingExtinf = line;
       continue;
     }
 
-    if (line.startsWith("#EXTVLCOPT")) {
+    if (line.startsWith('#EXTVLCOPT')) {
       applyVlcOption(pendingOptions, line);
       continue;
     }
 
-    if (line.startsWith("#EXTHTTP")) {
+    if (line.startsWith('#EXTHTTP')) {
       applyExtHttp(pendingOptions, line);
       continue;
     }
 
-    if (line.startsWith("#EXTGRP")) {
-      pendingOptions.group = line.slice("#EXTGRP:".length).trim();
+    if (line.startsWith('#EXTGRP')) {
+      pendingOptions.group = line.slice('#EXTGRP:'.length).trim();
       continue;
     }
 
-    if (line.startsWith("#")) {
+    if (line.startsWith('#')) {
       // Comentario ou tag nao reconhecida: ignorado sem interromper o parse.
       continue;
     }
@@ -125,8 +125,8 @@ function stripBom(text) {
 }
 
 function parsePlaylistHeader(headerLine) {
-  const line = (headerLine || "").trim();
-  const tvgUrl = getAttribute(line, "url-tvg") || getAttribute(line, "x-tvg-url") || "";
+  const line = (headerLine || '').trim();
+  const tvgUrl = getAttribute(line, 'url-tvg') || getAttribute(line, 'x-tvg-url') || '';
   return {
     epgUrl: tvgUrl,
     baseUrl: null,
@@ -139,12 +139,12 @@ function applyVlcOption(options, line) {
   const key = match[1].trim().toLowerCase();
   const value = match[2].trim();
   options.headers = options.headers || {};
-  if (key === "http-user-agent") options.headers["User-Agent"] = value;
-  else if (key === "http-referrer" || key === "http-referer") options.headers["Referer"] = value;
+  if (key === 'http-user-agent') options.headers['User-Agent'] = value;
+  else if (key === 'http-referrer' || key === 'http-referer') options.headers['Referer'] = value;
 }
 
 function applyExtHttp(options, line) {
-  const jsonPart = line.slice(line.indexOf(":") + 1).trim();
+  const jsonPart = line.slice(line.indexOf(':') + 1).trim();
   try {
     const parsed = JSON.parse(jsonPart);
     options.headers = { ...(options.headers || {}), ...parsed };
@@ -164,20 +164,18 @@ function resolveUrl(rawUrl, baseUrl) {
 }
 
 function buildChannel(extinfLine, options, sourceUrl) {
-  const attrs = extinfLine ? extinfLine.slice(0, findNameSeparator(extinfLine)) : "";
-  const rawName = extinfLine
-    ? extinfLine.slice(findNameSeparator(extinfLine) + 1).trim()
-    : "";
+  const attrs = extinfLine ? extinfLine.slice(0, findNameSeparator(extinfLine)) : '';
+  const rawName = extinfLine ? extinfLine.slice(findNameSeparator(extinfLine) + 1).trim() : '';
 
-  const tvgId = getAttribute(attrs, "tvg-id");
-  const tvgName = getAttribute(attrs, "tvg-name");
-  const name = (rawName || tvgName || "Canal sem nome").trim();
-  const group = getAttribute(attrs, "group-title") || "Sem categoria";
-  const logoUrl = getAttribute(attrs, "tvg-logo") || undefined;
-  const isRadio = /^(true|1|yes)$/i.test(getAttribute(attrs, "radio") || "");
-  const catchup = getAttribute(attrs, "catchup") || undefined;
-  const catchupSource = getAttribute(attrs, "catchup-source") || undefined;
-  const timeshift = getAttribute(attrs, "timeshift") || undefined;
+  const tvgId = getAttribute(attrs, 'tvg-id');
+  const tvgName = getAttribute(attrs, 'tvg-name');
+  const name = (rawName || tvgName || 'Canal sem nome').trim();
+  const group = getAttribute(attrs, 'group-title') || 'Sem categoria';
+  const logoUrl = getAttribute(attrs, 'tvg-logo') || undefined;
+  const isRadio = /^(true|1|yes)$/i.test(getAttribute(attrs, 'radio') || '');
+  const catchup = getAttribute(attrs, 'catchup') || undefined;
+  const catchupSource = getAttribute(attrs, 'catchup-source') || undefined;
+  const timeshift = getAttribute(attrs, 'timeshift') || undefined;
 
   if (!name || !sourceUrl) return null;
 
@@ -211,12 +209,12 @@ function findNameSeparator(line) {
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
     if (char === '"') insideQuotes = !insideQuotes;
-    else if (char === "," && !insideQuotes) return i;
+    else if (char === ',' && !insideQuotes) return i;
   }
   return line.length;
 }
 
 function getAttribute(source, key) {
-  const match = source.match(new RegExp(key + '="([^"]*)"', "i"));
-  return match ? match[1].trim() : "";
+  const match = source.match(new RegExp(key + '="([^"]*)"', 'i'));
+  return match ? match[1].trim() : '';
 }

@@ -5,3 +5,5 @@ media/streams/*
 .env
 .DS_Store
 Thumbs.db
+data/
+.claude/
