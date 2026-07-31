@@ -82,23 +82,53 @@ npm test
 ## 📂 Estrutura do Projeto
 
 ```
-├── server/                    # Backend Node/Express
-│   ├── app.js                  # Bootstrap do servidor
-│   ├── config.js               # Configuração via variáveis de ambiente
-│   ├── routes/                 # Endpoints da API (playlists, canais, playback, streams, health)
-│   ├── services/                # Probe, estratégia de reprodução, proxy HTTP/HLS, FFmpeg, hardware, cleanup
-│   ├── security/                # Validação de URLs (proteção contra SSRF)
-│   └── utils/                   # Helpers (logger, ids)
-├── public/                    # Frontend estático
-│   ├── index.html               # Página principal do player
-│   ├── admin.html               # Painel de diagnóstico
-│   ├── js/script.js             # Lógica do player (playlists, player, chamadas à API)
+├── server/                           # Backend Node/Express
+│   ├── app.js                        # Bootstrap do servidor
+│   ├── config.js                     # Configuração via variáveis de ambiente
+│   ├── store.js                      # Store em memória (playlists e canais)
+│   ├── routes/                       # Endpoints da API
+│   │   ├── playlists.js               # Importação de listas M3U (URL e upload)
+│   │   ├── xtream.js                  # Login e importação por painel Xtream
+│   │   ├── channels.js                # Consulta e filtro de canais
+│   │   ├── playback.js                # Resolução da estratégia de reprodução
+│   │   ├── streams.js                 # Entrega dos streams gerados
+│   │   └── health.js                  # Health check e diagnóstico
+│   ├── services/
+│   │   ├── m3uParser.js               # Parser de listas M3U
+│   │   ├── xtreamClient.js            # Cliente da API Xtream Codes
+│   │   ├── credentialStore.js         # Credenciais do painel cifradas em repouso
+│   │   ├── secretBox.js               # AES-256-GCM com chave derivada por scrypt
+│   │   ├── probeService.js            # Sondagem de canais (formato, codec, disponibilidade)
+│   │   ├── strategy.js                # Escolha entre direto, proxy ou remux
+│   │   ├── playbackOrchestrator.js    # Orquestração da reprodução
+│   │   ├── httpProxy.js               # Proxy HTTP (CORS e conteúdo misto)
+│   │   ├── hlsProxy.js                # Proxy de manifesto e segmentos HLS
+│   │   ├── ffmpegArgs.js              # Montagem dos argumentos do FFmpeg
+│   │   ├── processManager.js          # Ciclo de vida dos processos FFmpeg
+│   │   ├── hardware.js                # Detecção de aceleração por hardware
+│   │   ├── diagnostics.js             # Coleta de métricas para o painel
+│   │   └── cleanup.js                 # Remoção de streams temporários
+│   ├── security/
+│   │   └── validateUrl.js             # Validação de URLs (proteção contra SSRF)
+│   └── utils/
+│       ├── logger.js                  # Log estruturado com redação de credenciais
+│       └── ids.js                     # Geração de IDs estáveis
+├── public/                            # Frontend estático
+│   ├── index.html                     # Página principal do player
+│   ├── admin.html                     # Painel de diagnóstico
+│   ├── js/script.js                   # Lógica do player (playlists, Xtream, player, API)
 │   ├── css/style.css
-│   └── Listas_IPTV/             # Playlists M3U de exemplo
-├── tests/                     # Testes automatizados (unitários e e2e)
-├── media/streams/             # Saída temporária dos streams gerados pelo FFmpeg
+│   ├── img/                          # Logomarca e imagens
+│   └── Listas_IPTV/                  # Playlists M3U de exemplo
+├── tests/                            # Testes automatizados (unitários, integração e e2e)
+│   ├── fixtureServer.js              # Servidor de fixtures para os testes
+│   ├── generateFixtures.js           # Geração dos arquivos de mídia de teste
+│   └── setupEnv.js                   # Ambiente compartilhado entre suítes
+├── data/                             # Credenciais cifradas (gerado, fora do Git)
+├── media/streams/                    # Saída temporária dos streams gerados pelo FFmpeg
 ├── Dockerfile / docker-compose.yml
-└── .env.example                # Variáveis de ambiente disponíveis
+├── eslint.config.js
+└── .env.example                     # Variáveis de ambiente disponíveis
 ```
 
 ---
