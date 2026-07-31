@@ -1,4 +1,4 @@
-# 📺 IPTV Player
+# 📺 DeuPlay
 
 Um player de IPTV desenvolvido com **JavaScript puro no frontend** e **Node.js/Express no backend**, que permite ao usuário carregar e assistir canais de televisão por meio de listas M3U, tanto de URLs externas quanto de arquivos locais. O projeto utiliza **hls.js** para reprodução de streams HLS no navegador e **FFmpeg** para análise, remux e transcodificação dos canais quando necessário.
 
@@ -7,7 +7,6 @@ Um player de IPTV desenvolvido com **JavaScript puro no frontend** e **Node.js/E
 ## 🚀 Funcionalidades
 
 - **Carregar lista M3U via URL ou arquivo local:** cole o link da playlist ou faça upload direto do dispositivo.
-- **Playlists pré-definidas:** algumas listas já vêm junto (canais abertos do Brasil, CineTV, etc.) pra testar.
 - **Estratégia de reprodução automática:** o backend sonda o stream (via ffprobe) e escolhe a melhor abordagem, reprodução direta, proxy HTTP/HLS, remux ou transcodificação completa (vídeo, áudio ou ambos) - sem precisar de nada manual.
 - **Aceleração por hardware:** detecta e usa NVENC/QuickSync/VAAPI/VideoToolbox/AMF quando disponíveis, caindo para libx264 (software) se nada for compatível.
 - **Painel de diagnóstico (`/admin`):** mostra streams ativos, estratégia usada, status, viewers, PID e erros em tempo real, com ações administrativas.
@@ -20,7 +19,7 @@ Um player de IPTV desenvolvido com **JavaScript puro no frontend** e **Node.js/E
 
 ## 🖼️ **Pré-visualização**
 
-<img width="1912" height="897" alt="Image" src="https://github.com/user-attachments/assets/c08216aa-19be-4f2a-bd29-7e9d9f816140" />
+<img width="1910" height="897" alt="Image" src="https://github.com/user-attachments/assets/25286640-d3e3-413b-91dd-c45e9f283aaf" />
 
 ---
 
@@ -117,10 +116,26 @@ npm test
 
 ## 📜 Licença
 
-Distribuído sob a Licença de Uso Restrito (Licença Proprietária).
-Este software e os arquivos de documentação associados são fornecidos exclusivamente para uso pessoal e educacional.
-Veja o arquivo [LICENSE](https://github.com/thiago-ribeiro1/IPTV-Player/blob/main/LICENSE) para mais informações.
+Distribuído sob a Licença Pública Geral GNU v3.0 (GPL-3.0).
+Você pode usar, estudar, modificar e redistribuir este software livremente, desde que
+mantenha o aviso de copyright original e publique sob a mesma licença qualquer versão
+derivada. Veja o arquivo [LICENSE](https://github.com/thiago-ribeiro1/IPTV-Player/blob/main/LICENSE) para mais informações.
 
----
+Copyright (C) 2025-2026 Thiago Ribeiro ([@thiago-ribeiro1](https://github.com/thiago-ribeiro1))
 
-Desenvolvido por [Thiago Ribeiro](https://github.com/thiago-ribeiro1)
+> Este projeto é um **player**: ele não hospeda, distribui nem fornece qualquer conteúdo.
+> Todas as listas, painéis e credenciais são fornecidos pelo próprio usuário, que é o
+> único responsável por garantir que possui direito de acesso ao conteúdo que reproduz.
+
+## 📜 License
+
+Distributed under the GNU General Public License v3.0 (GPL-3.0).
+You are free to use, study, modify and redistribute this software, provided that you
+keep the original copyright notice and release any derivative work under the same
+license. See the [LICENSE](https://github.com/thiago-ribeiro1/IPTV-Player/blob/main/LICENSE) file for more information.
+
+Copyright (C) 2025-2026 Thiago Ribeiro ([@thiago-ribeiro1](https://github.com/thiago-ribeiro1))
+
+> This project is a **player**: it does not host, distribute or provide any content.
+> All playlists, panels and credentials are supplied by the user, who is solely
+> responsible for ensuring they have the right to access the content they play.
