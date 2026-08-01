@@ -23,6 +23,7 @@ Eu usava outro player web de **IPTV**, mas notei que travava com frequência. Em
 ## **Pré-visualização**
 
 <img width="1910" height="897" alt="Image" src="https://github.com/user-attachments/assets/d88c15bc-8d33-4c0f-a437-991710c56f05" />
+<img width="1908" height="900" alt="Image" src="https://github.com/user-attachments/assets/7cb86bac-13b3-47b7-b16f-1ea4bbc99710" />
 
 ---
 
