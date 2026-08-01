@@ -19,7 +19,7 @@ Um player de IPTV desenvolvido com **JavaScript puro no frontend** e **Node.js/E
 
 ## 🖼️ **Pré-visualização**
 
-<img width="1910" height="897" alt="Image" src="https://github.com/user-attachments/assets/25286640-d3e3-413b-91dd-c45e9f283aaf" />
+<img width="1910" height="897" alt="Image" src="https://github.com/user-attachments/assets/d88c15bc-8d33-4c0f-a437-991710c56f05" />
 
 ---
 
