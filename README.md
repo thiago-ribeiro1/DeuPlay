@@ -1,10 +1,10 @@
-# 📺 DeuPlay
+# DeuPlay
 
 Um player de IPTV desenvolvido com **JavaScript puro no frontend** e **Node.js/Express no backend**, que permite ao usuário carregar e assistir canais de televisão por meio de listas M3U, tanto de URLs externas quanto de arquivos locais. O projeto utiliza **hls.js** para reprodução de streams HLS no navegador e **FFmpeg** para análise, remux e transcodificação dos canais quando necessário.
 
 ---
 
-## 🚀 Funcionalidades
+## Funcionalidades
 
 - **Carregar lista M3U via URL ou arquivo local:** cole o link da playlist ou faça upload direto do dispositivo.
 - **Estratégia de reprodução automática:** o backend sonda o stream (via ffprobe) e escolhe a melhor abordagem, reprodução direta, proxy HTTP/HLS, remux ou transcodificação completa (vídeo, áudio ou ambos) - sem precisar de nada manual.
@@ -17,13 +17,13 @@ Um player de IPTV desenvolvido com **JavaScript puro no frontend** e **Node.js/E
 
 ---
 
-## 🖼️ **Pré-visualização**
+## **Pré-visualização**
 
 <img width="1910" height="897" alt="Image" src="https://github.com/user-attachments/assets/d88c15bc-8d33-4c0f-a437-991710c56f05" />
 
 ---
 
-## 🛠️ Como usar o projeto
+## Como usar o projeto
 
 ### Pré-requisitos
 
@@ -71,7 +71,7 @@ Acesse **http://localhost:3000** no navegador. O painel de diagnóstico fica em 
 docker compose up --build
 ```
 
-## 🧪 Testes
+## Testes
 
 ```bash
 npm test
@@ -79,7 +79,7 @@ npm test
 
 ---
 
-## 📂 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 ├── server/                           # Backend Node/Express
@@ -133,18 +133,18 @@ npm test
 
 ---
 
-## ⚡ Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
-- 🟢 **Node.js + Express** no backend
-- 🎬 **FFmpeg/ffprobe** para probing, remux e transcodificação
-- 💻 **JavaScript puro** no frontend
-- 📡 **hls.js** para streaming HLS no navegador
-- 🎨 **HTML5 + CSS3** (com Bootstrap 5 para responsividade)
-- 🐳 **Docker** para deploy
+- **Node.js + Express** no backend
+- **FFmpeg/ffprobe** para probing, remux e transcodificação
+- **JavaScript puro** no frontend
+- **hls.js** para streaming HLS no navegador
+- **HTML5 + CSS3** (com Bootstrap 5 para responsividade)
+- **Docker** para deploy
 
 ---
 
-## 📜 Licença
+## Licença
 
 Distribuído sob a Licença Pública Geral GNU v3.0 (GPL-3.0).
 Você pode usar, estudar, modificar e redistribuir este software livremente, desde que
@@ -157,7 +157,7 @@ Copyright (C) 2025-2026 Thiago Ribeiro ([@thiago-ribeiro1](https://github.com/th
 > Todas as listas, painéis e credenciais são fornecidos pelo próprio usuário, que é o
 > único responsável por garantir que possui direito de acesso ao conteúdo que reproduz.
 
-## 📜 License
+## License
 
 Distributed under the GNU General Public License v3.0 (GPL-3.0).
 You are free to use, study, modify and redistribute this software, provided that you
