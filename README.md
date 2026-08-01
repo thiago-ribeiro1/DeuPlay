@@ -33,8 +33,8 @@ Um player de IPTV desenvolvido com **JavaScript puro no frontend** e **Node.js/E
 ### Passo 1: Clone o repositório
 
 ```bash
-git clone https://github.com/thiago-ribeiro1/IPTV-Player.git
-cd IPTV-Player
+git clone https://github.com/thiago-ribeiro1/DeuPlay.git
+cd DeuPlay
 ```
 
 ### Passo 2: Instale as dependências
