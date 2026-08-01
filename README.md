@@ -1,19 +1,22 @@
 # DeuPlay
 
-Um player de IPTV desenvolvido com **JavaScript puro no frontend** e **Node.js/Express no backend**, que permite ao usuário carregar e assistir canais de televisão por meio de listas M3U, tanto de URLs externas quanto de arquivos locais. O projeto utiliza **hls.js** para reprodução de streams HLS no navegador e **FFmpeg** para análise, remux e transcodificação dos canais quando necessário.
+Eu usava outro player web de **IPTV**, mas notei que travava com frequência. Em vez de só trocar de ferramenta, decidi investigar a causa dessas falhas, e acabei construindo o meu próprio, pensado para uso local.
+
+**DeuPlay** é um player de IPTV com **JavaScript puro** no frontend e **Node.js/Express** no backend, que carrega e reproduz canais a partir de listas M3U (URL ou arquivo local) ou de um painel Xtream. O grande desafio foi fazer os streams tocarem de forma confiável no navegador, contornando CORS, conteúdo misto e a variedade de formatos que costumam travar os players web. Para isso, usa hls.js na reprodução HLS e FFmpeg para análise, remux e transcodificação dos canais quando necessário.
 
 ---
 
 ## Funcionalidades
 
-- **Carregar lista M3U via URL ou arquivo local:** cole o link da playlist ou faça upload direto do dispositivo.
-- **Estratégia de reprodução automática:** o backend sonda o stream (via ffprobe) e escolhe a melhor abordagem, reprodução direta, proxy HTTP/HLS, remux ou transcodificação completa (vídeo, áudio ou ambos) - sem precisar de nada manual.
-- **Aceleração por hardware:** detecta e usa NVENC/QuickSync/VAAPI/VideoToolbox/AMF quando disponíveis, caindo para libx264 (software) se nada for compatível.
-- **Painel de diagnóstico (`/admin`):** mostra streams ativos, estratégia usada, status, viewers, PID e erros em tempo real, com ações administrativas.
-- **Health check (`/api/health`):** status do FFmpeg/ffprobe, streams ativos, uso de disco, tudo em JSON.
-- **Limpeza automática:** sessões e processos ociosos se encerram sozinhos, e os arquivos de stream são zerados a cada boot.
-- **Validação de URLs:** bloqueia por padrão acesso a hosts privados/localhost, protegendo contra SSRF.
-- **Pronto para Docker:** `Dockerfile` e `docker-compose.yml` inclusos, já com FFmpeg embutido na imagem.
+- Carregar lista M3U via URL ou arquivo local: cole o link da playlist ou faça upload direto do dispositivo.
+- Login Xtream: conecte-se a um painel informando servidor, usuário e senha e importe o catálogo ao vivo direto da API. As credenciais, quando salvas, são cifradas em repouso com AES-256-GCM (chave derivada por scrypt de uma senha de acesso que nunca é gravada).
+- Estratégia de reprodução automática: o backend sonda o stream (via ffprobe) e escolhe a melhor abordagem — reprodução direta, proxy HTTP/HLS, remux ou transcodificação completa (vídeo, áudio ou ambos) — sem precisar de nada manual.
+- Aceleração por hardware: detecta e usa NVENC/QuickSync/VAAPI/VideoToolbox/AMF quando disponíveis, caindo para libx264 (software) se nada for compatível.
+- Validação de URLs: bloqueia por padrão acesso a hosts privados/localhost, protegendo contra SSRF.
+- Painel de diagnóstico (/admin): mostra streams ativos, estratégia usada, status, viewers, PID e erros em tempo real, com ações administrativas.
+- Health check (/api/health): status do FFmpeg/ffprobe, streams ativos e uso de disco, tudo em JSON.
+- Limpeza automática: sessões e processos ociosos se encerram sozinhos, e os arquivos de stream são zerados a cada boot.
+- Pronto para Docker: Dockerfile e docker-compose.yml inclusos, já com FFmpeg embutido na imagem.
 
 ---
 
@@ -139,7 +142,7 @@ npm test
 - **FFmpeg/ffprobe** para probing, remux e transcodificação
 - **JavaScript puro** no frontend
 - **hls.js** para streaming HLS no navegador
-- **HTML5 + CSS3** (com Bootstrap 5 para responsividade)
+- **HTML5 + CSS3**
 - **Docker** para deploy
 
 ---
@@ -149,7 +152,7 @@ npm test
 Distribuído sob a Licença Pública Geral GNU v3.0 (GPL-3.0).
 Você pode usar, estudar, modificar e redistribuir este software livremente, desde que
 mantenha o aviso de copyright original e publique sob a mesma licença qualquer versão
-derivada. Veja o arquivo [LICENSE](https://github.com/thiago-ribeiro1/IPTV-Player/blob/main/LICENSE) para mais informações.
+derivada. Veja o arquivo [LICENSE](https://github.com/thiago-ribeiro1/DeuPlay/blob/main/LICENSE) para mais informações.
 
 Copyright (C) 2025-2026 Thiago Ribeiro ([@thiago-ribeiro1](https://github.com/thiago-ribeiro1))
 
@@ -162,7 +165,7 @@ Copyright (C) 2025-2026 Thiago Ribeiro ([@thiago-ribeiro1](https://github.com/th
 Distributed under the GNU General Public License v3.0 (GPL-3.0).
 You are free to use, study, modify and redistribute this software, provided that you
 keep the original copyright notice and release any derivative work under the same
-license. See the [LICENSE](https://github.com/thiago-ribeiro1/IPTV-Player/blob/main/LICENSE) file for more information.
+license. See the [LICENSE](https://github.com/thiago-ribeiro1/DeuPlay/blob/main/LICENSE) file for more information.
 
 Copyright (C) 2025-2026 Thiago Ribeiro ([@thiago-ribeiro1](https://github.com/thiago-ribeiro1))
 
