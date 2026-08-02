@@ -3,6 +3,7 @@ import { config } from '../config.js';
 import { checkFfmpegAvailable, listProcesses } from '../services/processManager.js';
 import { checkFfprobeAvailable } from '../services/probeService.js';
 import { getStreamsDiskUsageBytes } from '../services/cleanup.js';
+import * as store from '../store.js';
 
 export const healthRouter = Router();
 
@@ -19,7 +20,10 @@ healthRouter.get('/health', async (req, res) => {
     ffmpegAvailable: ffmpeg,
     ffprobeAvailable: ffprobe,
     playbackMode: config.playbackMode,
-    activeStreams: processes.filter((p) => p.status === 'ready' || p.status === 'degraded').length,
+    activeStreams:
+      processes.filter((p) => p.status === 'ready' || p.status === 'degraded').length +
+      // Sessoes proxy/direto nao tem processo FFmpeg, mas sao streams ativos.
+      store.listSessions().filter((s) => s.status === 'ready' && !s.processKey).length,
     maxActiveStreams: config.maxActiveStreams,
     diskUsageBytes: getStreamsDiskUsageBytes(),
     warnings: [

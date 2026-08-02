@@ -3,7 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IPTV Player - Diagnóstico</title>
+    <meta
+      name="description"
+      content="IPTV Player - carregue sua lista M3U e assista aos seus canais."
+    />
+    <meta
+      name="keywords"
+      content="iptv, m3u, player, canais, tv, streaming, tvbox, assistir tv online, tv online grátis"
+    />
+    <meta property="og:image" content="img/glenn-carstens-peters-EOQhsfFBhRk-unsplash.jpg" />
+    <title>DeuPlay - Painel</title>
+    <link rel="icon" type="image/x-icon" href="img/icon.png" />
     <style>
       :root {
         color-scheme: dark;
@@ -164,6 +174,16 @@
       const emptyEl = document.getElementById('emptyMsg');
       const logsEl = document.getElementById('logs');
 
+      // Sem FFmpeg a saida e a propria origem; so os perfis de transcodificacao
+      // entregam h264.
+      function outputCodec(stream, mediaInfo) {
+        const source = mediaInfo.videoCodec || '?';
+        if (stream.kind === 'session' || stream.mode === 'remux') return source;
+        if (stream.mode === 'copy_video_transcode_audio') return source;
+        if (stream.mode === 'audio_only') return '—';
+        return 'h264';
+      }
+
       function fmtUptime(startedAt) {
         if (!startedAt) return '—';
         const sec = Math.round((Date.now() - startedAt) / 1000);
@@ -233,7 +253,7 @@
             '<td>' +
             escapeHtml(mi.videoCodec || '?') +
             ' → ' +
-            (s.mode === 'remux' ? escapeHtml(mi.videoCodec || '?') : 'h264') +
+            escapeHtml(outputCodec(s, mi)) +
             '</td>' +
             '<td>' +
             (mi.width ? mi.width + 'x' + mi.height : '—') +
@@ -254,7 +274,11 @@
 
           const actionsCell = tr.lastElementChild;
           actionsCell.appendChild(button('Logs', () => showLogs(s.key)));
-          actionsCell.appendChild(button('Reiniciar', () => action(s.key, 'restart')));
+          // Reiniciar so existe para processo FFmpeg; sessoes proxy/direto
+          // nao tem processo para reiniciar.
+          if (s.kind !== 'session') {
+            actionsCell.appendChild(button('Reiniciar', () => action(s.key, 'restart')));
+          }
           actionsCell.appendChild(button('Parar', () => action(s.key, 'stop')));
 
           rowsEl.appendChild(tr);

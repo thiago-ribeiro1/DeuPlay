@@ -59,6 +59,7 @@ async function handlePlayback(req, res, channel) {
       strategy: result.strategy,
       playbackUrl: result.playbackUrl,
       processKey: result.processKey,
+      mediaInfo: result.mediaInfo,
     });
 
     if (result.status !== 'ready') {
@@ -85,12 +86,10 @@ async function handlePlayback(req, res, channel) {
   } catch (err) {
     logger.error('playback_resolution_failed', { channelId: channel.id, error: err.message });
     store.updateSession(session.id, { status: 'failed' });
-    res
-      .status(500)
-      .json({
-        sessionId: session.id,
-        status: 'failed',
-        error: 'Falha interna ao preparar a reproducao.',
-      });
+    res.status(500).json({
+      sessionId: session.id,
+      status: 'failed',
+      error: 'Falha interna ao preparar a reproducao.',
+    });
   }
 }
