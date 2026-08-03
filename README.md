@@ -144,7 +144,7 @@ npm test
 - **JavaScript puro** no frontend
 - **hls.js** para streaming HLS no navegador
 - **HTML5 + CSS3**
-- **Docker** para deploy
+- **Docker**
 
 ---
 
