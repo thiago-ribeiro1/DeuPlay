@@ -123,7 +123,6 @@ npm test
 │   ├── js/script.js                   # Lógica do player (playlists, Xtream, player, API)
 │   ├── css/style.css
 │   ├── img/                          # Logomarca e imagens
-│   └── Listas_IPTV/                  # Playlists M3U de exemplo
 ├── tests/                            # Testes automatizados (unitários, integração e e2e)
 │   ├── fixtureServer.js              # Servidor de fixtures para os testes
 │   ├── generateFixtures.js           # Geração dos arquivos de mídia de teste
